@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id         String    @id @default(uuid())
+  name       String    @unique
+  engine     String?   @default("baileys")
+  auth_state Json?
+  attributes Json?
+  connected  Boolean   @default(false)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  messages   Message[]
+
+  @@map("sessions")
+}
+
+model Message {
+  id            String    @id @default(uuid())
+  session       Session   @relation(fields: [session_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  session_id    String
+  to            String
+  from          String?
+  body          String?   @db.Text
+  message_id    String? // id yang dikembalikan WA (message key id)
+  remote_id     String? // remote JID (untuk grup atau chat)
+  message_type  String? // individu | group | broadcast
+  content_type  String    @default("text") // text | image | video | document | audio | sticker
+  direction     String    @default("outgoing") // outgoing | incoming
+  status        String    @default("pending") // pending | sent | delivered | read | failed
+  error_message String?   @db.Text
+  delivered_at  DateTime?
+  read_at       DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  @@map("messages")
+}

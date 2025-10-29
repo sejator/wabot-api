@@ -1,0 +1,44 @@
+# Node modules & build output (akan di-install di container)
+node_modules
+dist
+build
+
+# Logs
+*.log
+logs
+
+# OS
+.DS_Store
+
+# Test coverage
+coverage
+.nyc_output
+
+# IDEs
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Env files akan di-mount, jangan copy ke image
+.env
+.env.*.local
+
+# Temp & runtime files
+.temp
+.tmp
+pids
+*.pid
+*.seed
+*.pid.lock
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Prisma generated
+/generated/prisma
+
+# WhatsApp Web.js auth/cache (akan di mount atau create runtime)
+.wwebjs_auth
+.wwebjs_cache
+.wabot_auth

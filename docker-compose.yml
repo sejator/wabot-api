@@ -1,0 +1,18 @@
+services:
+  wabot-api:
+    build:
+      context: .
+    container_name: wabot-api
+    ports:
+      - "${APP_PORT:-3000}:${APP_PORT:-3000}"
+    env_file:
+      - .env
+    environment:
+      - WWEBJS_SESSION_PATH=/app/.wabot_auth
+      - WWEBJS_CACHE_PATH=/app/.wwebjs_cache
+    volumes:
+      - "${WWEBJS_SESSION_PATH}:/app/.wabot_auth"
+      - "${WWEBJS_CACHE_PATH}:/app/.wwebjs_cache"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
