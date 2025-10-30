@@ -77,7 +77,10 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       dto.isGroup,
     );
     if (!connector) throw new NotFoundException('Session not connected');
-    if (!jid) throw new NotFoundException('Nomor tidak terdaftar di WhatsApp');
+    if (!jid)
+      throw new NotFoundException(
+        `Nomor tidak terdaftar di WhatsApp : ${dto.phone}`,
+      );
 
     const message = await this.prisma.message.create({
       data: {
@@ -184,7 +187,10 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       dto.isGroup,
     );
     if (!connector) throw new NotFoundException('Session not connected');
-    if (!jid) throw new NotFoundException('Nomor tidak terdaftar di WhatsApp');
+    if (!jid)
+      throw new NotFoundException(
+        `Nomor tidak terdaftar di WhatsApp : ${dto.phone}`,
+      );
 
     const message = await this.prisma.message.create({
       data: {
@@ -294,7 +300,10 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       dto.isGroup,
     );
     if (!connector) throw new NotFoundException('Session not connected');
-    if (!jid) throw new NotFoundException('Nomor tidak terdaftar di WhatsApp');
+    if (!jid)
+      throw new NotFoundException(
+        `Nomor tidak terdaftar di WhatsApp : ${dto.phone}`,
+      );
 
     const message = await this.prisma.message.create({
       data: {
@@ -411,7 +420,10 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       dto.isGroup,
     );
     if (!connector) throw new NotFoundException('Session not connected');
-    if (!jid) throw new NotFoundException('Nomor tidak terdaftar di WhatsApp');
+    if (!jid)
+      throw new NotFoundException(
+        `Nomor tidak terdaftar di WhatsApp : ${dto.phone}`,
+      );
 
     const message = await this.prisma.message.create({
       data: {
