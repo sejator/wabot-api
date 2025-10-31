@@ -11,7 +11,6 @@ async function bootstrap() {
     bufferLogs: true,
   });
   const PORT = process.env.PORT || 3000;
-  const HOST = process.env.HOST || '127.0.0.1';
   const logger = app.get(FileLoggerService);
 
   app.useLogger(logger);
@@ -23,9 +22,8 @@ async function bootstrap() {
   // adapter websocket
   app.useWebSocketAdapter(new WsAdapter(app));
 
-  await app.listen(PORT, HOST);
-
-  logger.log(`Application is running on: http://${HOST}:${PORT}`);
+  await app.listen(PORT);
+  logger.log(`Application is running on: ${PORT}`);
 }
 
 bootstrap().catch((err) => {
