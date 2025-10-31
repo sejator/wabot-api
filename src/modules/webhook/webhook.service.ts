@@ -122,11 +122,11 @@ export class WebhookService {
     }
   }
 
-  async websocketEvent(
+  async webhookServerAdmin(
     event: SessionEvent | MessageEvent,
     payload: SessionPayload | MessagePayload,
   ): Promise<void> {
-    const secret = process.env.WEBHOOK_SECRET || 'default_secret';
+    const secret = process.env.PRIVATE_KEY_SERVER_ADMIN || 'default_secret';
     const webhookUrl = process.env.WEBHOOK_URL_ADMIN;
 
     if (!webhookUrl) {

@@ -143,7 +143,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -171,7 +171,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     }
   }
 
@@ -256,7 +256,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -284,7 +284,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     }
   }
 
@@ -376,7 +376,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -404,7 +404,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     }
   }
 
@@ -497,7 +497,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -525,7 +525,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.websocketEvent('message.updated', payload);
+      void this.webhook.webhookServerAdmin('message.updated', payload);
     }
   }
 }

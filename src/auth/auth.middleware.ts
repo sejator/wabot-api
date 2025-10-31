@@ -26,14 +26,15 @@ export class AuthMiddleware implements NestMiddleware {
       throw new UnauthorizedException('Access denied');
     }
 
-    const validToken = process.env.SERVER_TOKEN || 'acakTokendeFault';
+    const validToken =
+      process.env.PUBLIC_KEY_SERVER_ADMIN || 'acakTokendeFault';
     if (token !== validToken) {
       this.logger.warn(`Invalid token attempt from IP: ${req.ip}`);
       throw new UnauthorizedException('Access denied');
     }
 
     // --- Validasi IP ---
-    const allowedIps = (process.env.SERVER_IP || '127.0.0.1,localhost')
+    const allowedIps = (process.env.SERVER_IP_ADMIN || '127.0.0.1,localhost')
       .split(',')
       .map((ip) => ip.trim());
 
