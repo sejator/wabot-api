@@ -273,6 +273,11 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
               data: { connected: false, auth_state: Prisma.DbNull },
             });
 
+            // destroy tabel auth_keys, pre_keys, sessions
+            await this.prisma.authKey.deleteMany({
+              where: { session_id: session.id },
+            });
+
             this.connectorRegistry.unregister(session.id);
             this.logger.warn(`Session logged out: ${session.id}`);
 
