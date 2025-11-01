@@ -6,7 +6,11 @@ import {
   formatPhoneToJid,
   mapBaileysStatusMessage,
 } from 'src/common/utils/baileys.util';
-import { delay, stringifyError } from 'src/common/utils/general.util';
+import {
+  delay,
+  formatDateTime,
+  stringifyError,
+} from 'src/common/utils/general.util';
 import { proto, WASocket } from 'baileys';
 import {
   CreateDocumentMessageDto,
@@ -150,8 +154,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'text',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -181,8 +185,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         content_type: 'text',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook
@@ -272,8 +276,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'image',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -303,8 +307,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         content_type: 'image',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook
@@ -395,8 +399,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'video',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -426,8 +430,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         content_type: 'video',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook
@@ -523,8 +527,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'document',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -554,8 +558,8 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
         content_type: 'document',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook

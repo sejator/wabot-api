@@ -13,7 +13,11 @@ import type Redlock from 'redlock';
 import { REDLOCK } from 'src/modules/redis/redis.module';
 import { Client, LocalAuth, Message, MessageAck } from 'whatsapp-web.js';
 import QRCode from 'qrcode';
-import { getAppVersion, stringifyError } from 'src/common/utils/general.util';
+import {
+  formatDateTime,
+  getAppVersion,
+  stringifyError,
+} from 'src/common/utils/general.util';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
@@ -214,10 +218,10 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
           content_type: message.content_type,
           direction: message.direction,
           error_message: message.error_message,
-          read_at: message.read_at,
-          delivered_at: message.delivered_at,
-          created_at: message.created_at,
-          updated_at: message.updated_at,
+          read_at: formatDateTime(message.read_at),
+          delivered_at: formatDateTime(message.delivered_at),
+          created_at: formatDateTime(message.created_at),
+          updated_at: formatDateTime(message.updated_at),
         } as MessagePayload;
 
         const connector = this.connectorRegistry.get(sessionId);
@@ -274,7 +278,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
             name: session.name,
             engine: session.engine || 'baileys',
             status: 'qr_timeout',
-            timestamp: new Date(),
+            timestamp: formatDateTime(new Date()),
           } as SessionPayload;
 
           wabot.emit('session.qr_timeout', payload);
@@ -295,7 +299,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
             name: session.name,
             engine: session.engine || 'baileys',
             status: 'disconnected',
-            timestamp: new Date(),
+            timestamp: formatDateTime(new Date()),
           } as SessionPayload;
 
           wabot.emit('session.disconnected', payload);
@@ -331,7 +335,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         name: session.name,
         engine: session.engine || 'baileys',
         status: 'synchronized',
-        timestamp: new Date(),
+        timestamp: formatDateTime(new Date()),
       } as SessionPayload;
 
       wabot.emit('session.synchronized', payload);
@@ -349,7 +353,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         name: session.name,
         engine: session.engine || 'baileys',
         status: 'synchronized',
-        timestamp: new Date(),
+        timestamp: formatDateTime(new Date()),
       } as SessionPayload;
 
       wabot.emit('session.synchronized', payload);
@@ -382,7 +386,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
           name: session.name,
           engine: session.engine || 'baileys',
           status: 'error',
-          timestamp: new Date(),
+          timestamp: formatDateTime(new Date()),
           message: 'Failed to generate QR code',
         } as SessionPayload;
 
@@ -410,7 +414,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
           name: session.name,
           engine: session.engine || 'baileys',
           status: 'connected',
-          timestamp: new Date(),
+          timestamp: formatDateTime(new Date()),
         } as SessionPayload;
 
         wabot.emit('session.connected', payload);
@@ -458,7 +462,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
           name: session.name,
           engine: session.engine || 'baileys',
           status: 'error',
-          timestamp: new Date(),
+          timestamp: formatDateTime(new Date()),
           message: 'Initialization timed out (Puppeteer Timeout).',
         } as SessionPayload;
 
@@ -478,7 +482,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         name: session.name,
         engine: session.engine || 'baileys',
         status: 'error',
-        timestamp: new Date(),
+        timestamp: formatDateTime(new Date()),
         message: `Initialization failed: ${errStr}`,
       } as SessionPayload;
 
@@ -495,7 +499,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         name: session.name,
         engine: session.engine || 'baileys',
         status: 'connected',
-        timestamp: new Date(),
+        timestamp: formatDateTime(new Date()),
       } as SessionPayload;
 
       // emit ke websocket dan webhook
@@ -514,7 +518,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       status: 'qr_generated',
       qrCodeUrl: qrCodeUrl,
       timeout: parseInt(process.env.QRCODE_TIME_OUT || '60', 10) - 3, // untuk sinyal ke client
-      timestamp: new Date(),
+      timestamp: formatDateTime(new Date()),
     } as SessionPayload;
 
     // emit ke websocket dan webhook
@@ -544,7 +548,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       name: session.name,
       engine: session.engine || 'wwebjs',
       status: 'disconnected',
-      timestamp: new Date(),
+      timestamp: formatDateTime(new Date()),
     } as SessionPayload;
 
     wabot.emit('session.disconnected', payload);

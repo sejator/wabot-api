@@ -114,7 +114,7 @@ export class WebhookService {
       );
 
       this.logger.debug(
-        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} → ${url} [${response.status}]`,
+        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} -> ${url} [${response.status}]`,
       );
     } catch (error) {
       const err = error as AxiosError;

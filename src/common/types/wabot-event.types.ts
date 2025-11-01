@@ -11,8 +11,8 @@ export interface MessagePayload {
   content_type?: string;
   direction?: 'outgoing' | 'incoming';
   error_message?: string | null;
-  created_at: string | Date;
-  updated_at: string | Date;
+  created_at?: string | Date | null;
+  updated_at?: string | Date | null;
   delivered_at?: string | Date | null;
   read_at?: string | Date | null;
   is_webhook_success?: boolean;

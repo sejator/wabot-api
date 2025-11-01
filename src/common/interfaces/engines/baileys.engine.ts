@@ -140,7 +140,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
         name: session.name,
         engine: session.engine || 'baileys',
         status: 'synchronized',
-        timestamp: new Date(),
+        timestamp: formatDateTime(new Date()),
       } as SessionPayload;
 
       wabot.emit('session.synchronized', payload);
@@ -184,7 +184,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
               name: session.name,
               engine: session.engine || 'baileys',
               status: 'qr_timeout',
-              timestamp: new Date(),
+              timestamp: formatDateTime(new Date()),
             } as SessionPayload;
 
             wabot.emit('session.qr_timeout', payload);
@@ -217,7 +217,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
               name: session.name,
               engine: session.engine || 'baileys',
               status: 'error',
-              timestamp: new Date(),
+              timestamp: formatDateTime(new Date()),
               message: 'Failed to generate QR code',
             } as SessionPayload;
 
@@ -246,7 +246,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             name: session.name,
             engine: session.engine || 'baileys',
             status: 'connected',
-            timestamp: new Date(),
+            timestamp: formatDateTime(new Date()),
           } as SessionPayload;
 
           wabot.emit('session.connected', payload);
@@ -282,7 +282,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
               name: session.name,
               engine: session.engine || 'baileys',
               status: 'disconnected',
-              timestamp: new Date(),
+              timestamp: formatDateTime(new Date()),
             } as SessionPayload;
 
             wabot.emit('session.disconnected', payload);
@@ -435,7 +435,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
         name: session.name,
         engine: session.engine || 'baileys',
         status: 'connected',
-        timestamp: new Date(),
+        timestamp: formatDateTime(new Date()),
       } as SessionPayload;
 
       // emit ke websocket dan webhook
@@ -455,7 +455,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
       status: 'qr_generated',
       qrCodeUrl: qrCodeUrl,
       timeout: parseInt(process.env.QRCODE_TIME_OUT || '60', 10) - 3, // untuk sinyal ke client
-      timestamp: new Date(),
+      timestamp: formatDateTime(new Date()),
     } as SessionPayload;
 
     // emit ke websocket dan webhook
@@ -485,7 +485,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
       name: session.name,
       engine: session.engine || 'baileys',
       status: 'disconnected',
-      timestamp: new Date(),
+      timestamp: formatDateTime(new Date()),
     } as SessionPayload;
 
     wabot.emit('session.disconnected', payload);

@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AbstractMessageEngine } from './abstract-message-engine';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { delay, stringifyError } from 'src/common/utils/general.util';
+import {
+  delay,
+  formatDateTime,
+  stringifyError,
+} from 'src/common/utils/general.util';
 import {
   CreateDocumentMessageDto,
   CreateImageMessageDto,
@@ -138,8 +142,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'text',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -169,8 +173,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         content_type: 'text',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook
@@ -255,8 +259,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'image',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -286,8 +290,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         content_type: 'video',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook
@@ -379,8 +383,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'video',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -410,8 +414,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         content_type: 'video',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook
@@ -504,8 +508,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         to: message.to,
         content_type: 'document',
         direction: 'outgoing',
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
         is_webhook_success: true,
       };
 
@@ -535,8 +539,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         content_type: 'document',
         direction: 'outgoing',
         error_message: errorMsg,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
+        created_at: formatDateTime(message.created_at),
+        updated_at: formatDateTime(message.updated_at),
       };
 
       this.webhook
