@@ -31,9 +31,9 @@ const getSessionMutex = (sessionId: string): Mutex => {
   return m;
 };
 
-const MAX_PRE_KEYS = 150;
-const MAX_SESSIONS = 100;
-const MAX_SENDER_KEYS = 100;
+const MAX_PRE_KEYS = 500;
+const MAX_SESSIONS = 500;
+const MAX_SENDER_KEYS = 500;
 
 export const useBaileysAuthState = async (
   prisma: PrismaService,
@@ -56,10 +56,7 @@ export const useBaileysAuthState = async (
     const normalized = JSON.parse(
       JSON.stringify(row.auth_state),
       BufferJSON.reviver,
-    ) as {
-      creds?: AuthenticationCreds;
-      keys?: KeysStore;
-    };
+    ) as { creds?: AuthenticationCreds; keys?: KeysStore };
 
     return {
       creds: normalized?.creds ?? initAuthCreds(),
@@ -122,9 +119,7 @@ export const useBaileysAuthState = async (
           await redlock.release(lock);
         } catch (releaseErr) {
           console.warn(
-            `[AuthState] Gagal release redlock session ${sessionId}: ${String(
-              releaseErr,
-            )}`,
+            `[AuthState] Gagal release redlock session ${sessionId}: ${String(releaseErr)}`,
           );
         }
       }
@@ -146,19 +141,10 @@ export const useBaileysAuthState = async (
     public: { data: Uint8Array };
     private: { data: Uint8Array };
   } => {
-    if (
-      !value ||
-      typeof value !== 'object' ||
-      !('public' in value) ||
-      !('private' in value)
-    ) {
-      return false;
-    }
-
+    if (!value || typeof value !== 'object') return false;
     const obj = value as Record<string, unknown>;
     const publicVal = obj.public as Record<string, unknown> | undefined;
     const privateVal = obj.private as Record<string, unknown> | undefined;
-
     return (
       publicVal?.data instanceof Uint8Array &&
       privateVal?.data instanceof Uint8Array
@@ -209,13 +195,11 @@ export const useBaileysAuthState = async (
           const items = data[category];
           if (!items) continue;
 
-          // Pastikan kategori ada
           if (!authState.keys[category]) authState.keys[category] = {};
 
           for (const [id, val] of Object.entries(items)) {
             if (!val || id === 'undefined' || id === 'null') continue;
 
-            // Validasi khusus pre-key
             if (category === 'pre-key' && !isValidPreKey(val)) {
               delete authState.keys['pre-key']?.[id];
               continue;
@@ -224,7 +208,7 @@ export const useBaileysAuthState = async (
             authState.keys[category][id] = val;
           }
 
-          // Batas maksimum simpanan per kategori
+          // Hindari hapus pre-key yang masih dipakai
           const keys = Object.keys(authState.keys[category] ?? {});
           const limit =
             category === 'pre-key'
@@ -236,14 +220,26 @@ export const useBaileysAuthState = async (
                   : 20;
 
           if (keys.length > limit) {
-            const toDelete = keys.slice(0, keys.length - limit);
-            for (const delId of toDelete) {
-              delete authState.keys[category]?.[delId];
+            if (category === 'pre-key') {
+              const activeSessionIds = Object.keys(
+                authState.keys['session'] || {},
+              );
+              const toDelete = keys
+                .filter((id) => !activeSessionIds.includes(id))
+                .slice(0, keys.length - limit);
+              for (const delId of toDelete) {
+                delete authState.keys['pre-key']?.[delId];
+              }
+            } else {
+              const toDelete = keys.slice(0, keys.length - limit);
+              for (const delId of toDelete) {
+                delete authState.keys[category]?.[delId];
+              }
             }
           }
         }
 
-        // Simpan hanya kategori penting
+        // Simpan hasil
         await persistAuthStateToDb({
           creds: authState.creds,
           keys: {
