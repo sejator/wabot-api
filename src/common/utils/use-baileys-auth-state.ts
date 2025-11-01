@@ -1,3 +1,12 @@
+/**
+ * Perbaikan yang diusulkan untuk persistensi auth state Baileys dengan Postgres + Prisma
+ * - Memperbaiki logika pruning pre-key (jangan bandingkan id pre-key dengan id session).
+ * - Membuat validasi pre-key menerima Node Buffer (Buffer adalah subclass dari Uint8Array).
+ * - Memperbaiki serialisasi / deserialisasi menggunakan BufferJSON.
+ * - Menambahkan komentar dan penjelasan debugging untuk membantu diagnosa PreKeyError.
+ *
+ */
+
 import Redlock from 'redlock';
 import { BufferJSON, initAuthCreds, proto } from 'baileys';
 import type {
@@ -12,9 +21,9 @@ import { Mutex } from 'async-mutex';
 
 /**
  * Helper auth state Baileys tanpa enkripsi.
- * - Simpan/muat state dari database via Prisma
+ * - Menyimpan/memuat state dari database via Prisma
  * - Mendukung distributed lock via Redlock (opsional)
- * - Fallback mutex lokal untuk menjaga atomic update
+ * - Fallback mutex lokal untuk menjaga update bersifat atomic
  */
 
 type KeysStore = Partial<
@@ -48,15 +57,23 @@ export const useBaileysAuthState = async (
     const row = await prisma.session.findUnique({ where: { id: sessionId } });
     if (!row) throw new Error(`Session ${sessionId} not found`);
 
+    // Jika auth_state kosong, kembalikan creds baru
     if (!row.auth_state) {
       return { creds: initAuthCreds(), keys: {} };
     }
 
-    // Re-hydrate dari JSON menggunakan BufferJSON.reviver
+    // PENTING:
+    // row.auth_state disimpan sebagai JSONB oleh Prisma. Kita perlu mereviver objek-objek yang
+    // sebelumnya diserialisasi oleh BufferJSON.replacer. Menggunakan JSON.stringify pada objek
+    // yang disimpan di DB lalu JSON.parse dengan BufferJSON.reviver akan mengembalikan Uint8Array / Buffer.
+    // (Ini mencerminkan bagaimana kita serialise sebelum menyimpan.)
     const normalized = JSON.parse(
       JSON.stringify(row.auth_state),
       BufferJSON.reviver,
-    ) as { creds?: AuthenticationCreds; keys?: KeysStore };
+    ) as {
+      creds?: AuthenticationCreds;
+      keys?: KeysStore;
+    };
 
     return {
       creds: normalized?.creds ?? initAuthCreds(),
@@ -69,6 +86,7 @@ export const useBaileysAuthState = async (
     creds: AuthenticationCreds;
     keys: KeysStore;
   }): Promise<void> => {
+    // Konversi ke struktur yang dapat diserialisasi JSON menggunakan BufferJSON.replacer
     const serializable = JSON.parse(
       JSON.stringify(authState, BufferJSON.replacer),
     ) as unknown as Prisma.InputJsonValue;
@@ -96,7 +114,6 @@ export const useBaileysAuthState = async (
     const resource = `locks:session:${sessionId}`;
     const ttl = 8000;
     let lock: Redlock.Lock | undefined;
-
     try {
       lock = await redlock.acquire([resource], ttl);
       await updateToDb();
@@ -119,7 +136,9 @@ export const useBaileysAuthState = async (
           await redlock.release(lock);
         } catch (releaseErr) {
           console.warn(
-            `[AuthState] Gagal release redlock session ${sessionId}: ${String(releaseErr)}`,
+            `[AuthState] Gagal release redlock session ${sessionId}: ${String(
+              releaseErr,
+            )}`,
           );
         }
       }
@@ -128,32 +147,41 @@ export const useBaileysAuthState = async (
 
   // Muat state awal
   const initial = await readAuthStateFromDb();
-
   const authState: { creds: AuthenticationCreds; keys: KeysStore } = {
     creds: initial.creds,
     keys: initial.keys ?? {},
   };
 
-  /** Type guard aman untuk validasi pre-key */
+  /**
+   * Type guard aman untuk validasi pre-key
+   *
+   * CATATAN: Node Buffer adalah subclass dari Uint8Array, jadi pengecekan instanceof Uint8Array
+   * juga akan mengembalikan true untuk Buffer. Kita menerima Buffer atau Uint8Array.
+   */
   const isValidPreKey = (
     value: unknown,
   ): value is {
-    public: { data: Uint8Array };
-    private: { data: Uint8Array };
+    public: { data: Uint8Array | Buffer };
+    private: { data: Uint8Array | Buffer };
   } => {
     if (!value || typeof value !== 'object') return false;
     const obj = value as Record<string, unknown>;
     const publicVal = obj.public as Record<string, unknown> | undefined;
     const privateVal = obj.private as Record<string, unknown> | undefined;
     return (
-      publicVal?.data instanceof Uint8Array &&
-      privateVal?.data instanceof Uint8Array
+      (publicVal?.data instanceof Uint8Array ||
+        (typeof Buffer !== 'undefined' && Buffer.isBuffer(publicVal?.data))) &&
+      (privateVal?.data instanceof Uint8Array ||
+        (typeof Buffer !== 'undefined' && Buffer.isBuffer(privateVal?.data)))
     );
   };
 
-  /** Implementasi AuthenticationState Baileys */
+  /**
+   * Implementasi AuthenticationState Baileys
+   */
   const state: AuthenticationState = {
     creds: authState.creds,
+
     keys: {
       /** Mendapatkan key dari kategori tertentu */
       get: async <T extends keyof SignalDataTypeMap>(
@@ -166,16 +194,18 @@ export const useBaileysAuthState = async (
         for (const id of ids) {
           let value = (store[id] as SignalDataTypeMap[T]) ?? null;
 
-          // khusus untuk proto app-state-sync-key
+          // khusus untuk proto app-state-sync-key, rehydrate menjadi objek protobuf yang
+          // diharapkan oleh Baileys
           if (type === 'app-state-sync-key' && value) {
             try {
               value = proto.Message.AppStateSyncKeyData.fromObject(
                 value as Record<string, unknown>,
               ) as unknown as SignalDataTypeMap[T];
             } catch {
-              // fallback ke value mentah
+              // fallback ke value mentah jika fromObject gagal
             }
           }
+
           out[id] = value;
         }
 
@@ -194,13 +224,14 @@ export const useBaileysAuthState = async (
         for (const category of validCategories) {
           const items = data[category];
           if (!items) continue;
-
           if (!authState.keys[category]) authState.keys[category] = {};
 
           for (const [id, val] of Object.entries(items)) {
             if (!val || id === 'undefined' || id === 'null') continue;
 
+            // Jika pre-key, validasi bentuk sebelum menyimpan
             if (category === 'pre-key' && !isValidPreKey(val)) {
+              // Jika tidak valid, hapus entri yang ada dengan id yang sama untuk menghindari korupsi
               delete authState.keys['pre-key']?.[id];
               continue;
             }
@@ -208,7 +239,15 @@ export const useBaileysAuthState = async (
             authState.keys[category][id] = val;
           }
 
-          // Hindari hapus pre-key yang masih dipakai
+          // Logika pembersihan.
+          // FIX PENTING:
+          // Sebelumnya kita membandingkan id pre-key dengan id session (dua namespace berbeda)
+          // sehingga pre-key yang valid bisa terhapus dan menghasilkan error "Invalid PreKey ID".
+          //
+          // Sebagai gantinya:
+          // - Untuk pre-key: kita mempertahankan MAX_PRE_KEYS entri terbaru dengan mengurutkan id numerik
+          //   (id pre-key biasanya string numerik).
+          // - Untuk kategori lain: gunakan pemangkasan berbasis urutan insertion (mirip LRU sederhana).
           const keys = Object.keys(authState.keys[category] ?? {});
           const limit =
             category === 'pre-key'
@@ -221,14 +260,25 @@ export const useBaileysAuthState = async (
 
           if (keys.length > limit) {
             if (category === 'pre-key') {
-              const activeSessionIds = Object.keys(
-                authState.keys['session'] || {},
-              );
-              const toDelete = keys
-                .filter((id) => !activeSessionIds.includes(id))
-                .slice(0, keys.length - limit);
-              for (const delId of toDelete) {
-                delete authState.keys['pre-key']?.[delId];
+              // Coba urutkan id numerik naik, lalu hapus yang terlama untuk mempertahankan yang terbaru.
+              // Jika id tidak numerik, fallback ke penghapusan berdasarkan urutan insertion.
+              const numericKeys = keys.filter((k) => /^\d+$/.test(k));
+              if (numericKeys.length >= Math.floor(limit / 2)) {
+                const sorted = numericKeys
+                  .map((k) => ({ k, n: Number(k) }))
+                  .sort((a, b) => a.n - b.n)
+                  .map((x) => x.k);
+
+                const toDelete = sorted.slice(0, keys.length - limit);
+                for (const delId of toDelete) {
+                  delete authState.keys['pre-key']?.[delId];
+                }
+              } else {
+                // fallback: hapus terlama berdasarkan urutan insertion
+                const toDelete = keys.slice(0, keys.length - limit);
+                for (const delId of toDelete) {
+                  delete authState.keys['pre-key']?.[delId];
+                }
               }
             } else {
               const toDelete = keys.slice(0, keys.length - limit);
@@ -239,7 +289,7 @@ export const useBaileysAuthState = async (
           }
         }
 
-        // Simpan hasil
+        // Persist setelah setiap set agar proses lain cepat melihat pembaruan
         await persistAuthStateToDb({
           creds: authState.creds,
           keys: {
