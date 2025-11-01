@@ -49,4 +49,13 @@ export class SessionsController {
   async stop(@Param('id') id: string) {
     return await this.sessions.stop(id);
   }
+
+  /**
+   * Force delete session/connector dari in-memory registry.
+   * Mengembalikan objek { ok: boolean, message: string, sessionId?: string }
+   */
+  @Delete(':id/force')
+  forceDelete(@Param('id') id: string) {
+    return this.sessions.forceDelete(id);
+  }
 }

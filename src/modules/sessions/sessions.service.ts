@@ -206,4 +206,21 @@ export class SessionsService implements OnModuleInit {
       await delay(randomDelay);
     }
   }
+
+  forceDelete(session_id: string) {
+    const connectorExists = this.connectorRegistry.has(session_id);
+    if (connectorExists) {
+      this.connectorRegistry.unregister(session_id);
+      this.logger.warn(`Force deleted connector for session: ${session_id}`);
+      return {
+        success: true,
+        sessionId: session_id,
+      };
+    } else {
+      return {
+        success: false,
+        sessionId: session_id,
+      };
+    }
+  }
 }
