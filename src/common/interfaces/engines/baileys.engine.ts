@@ -20,7 +20,7 @@ import {
   SessionAttributes,
 } from 'src/common/types/session.type';
 import { useBaileysAuthState } from 'src/common/utils/use-baileys-auth-state';
-import { getAppVersion } from 'src/common/utils/general.util';
+import { formatDateTime, getAppVersion } from 'src/common/utils/general.util';
 import {
   destroyAllListeners,
   mapBaileysStatusMessage,
@@ -144,7 +144,9 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
       } as SessionPayload;
 
       wabot.emit('session.synchronized', payload);
-      void this.webhook.webhookServerAdmin('session.synchronized', payload);
+      this.webhook
+        .webhookServerAdmin('session.synchronized', payload)
+        .catch(() => {});
     });
 
     const qrCodePromise = new Promise<string | null>((resolve) => {
@@ -186,7 +188,9 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             } as SessionPayload;
 
             wabot.emit('session.qr_timeout', payload);
-            void this.webhook.webhookServerAdmin('session.qr_timeout', payload);
+            this.webhook
+              .webhookServerAdmin('session.qr_timeout', payload)
+              .catch(() => {});
 
             clearTimeout(timeout);
             resolve(null);
@@ -218,7 +222,9 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             } as SessionPayload;
 
             wabot.emit('session.error', payload);
-            void this.webhook.webhookServerAdmin('session.error', payload);
+            this.webhook
+              .webhookServerAdmin('session.error', payload)
+              .catch(() => {});
 
             clearTimeout(timeout);
             resolve(null);
@@ -244,7 +250,9 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
           } as SessionPayload;
 
           wabot.emit('session.connected', payload);
-          void this.webhook.webhookServerAdmin('session.connected', payload);
+          this.webhook
+            .webhookServerAdmin('session.connected', payload)
+            .catch(() => {});
 
           clearTimeout(timeout);
           resolve(null);
@@ -278,10 +286,9 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             } as SessionPayload;
 
             wabot.emit('session.disconnected', payload);
-            void this.webhook.webhookServerAdmin(
-              'session.disconnected',
-              payload,
-            );
+            this.webhook
+              .webhookServerAdmin('session.disconnected', payload)
+              .catch(() => {});
           }
 
           clearTimeout(timeout);
@@ -366,13 +373,14 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
               content_type: message.content_type,
               direction: message.direction,
               error_message: message.error_message,
-              read_at: message.read_at,
-              delivered_at: message.delivered_at,
-              created_at: message.created_at,
-              updated_at: message.updated_at,
+              read_at: formatDateTime(message.read_at),
+              delivered_at: formatDateTime(message.delivered_at),
+              created_at: formatDateTime(message.created_at),
+              updated_at: formatDateTime(message.updated_at),
             } as MessagePayload;
 
             const connector = this.connectorRegistry.get(session.id);
+
             this.webhook
               .statusMessage(
                 'message.updated',
@@ -380,10 +388,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
                 connector.sessionAttributes,
                 payload,
               )
-              .then(() => {})
               .catch(() => {});
-
-            void this.webhook.webhookServerAdmin('message.updated', payload);
           } catch (err) {
             this.logger.error(
               `Gagal memperbarui status pesan ${key.id} : ${err}`,
@@ -435,7 +440,9 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
 
       // emit ke websocket dan webhook
       wabot.emit('session.connected', payload);
-      void this.webhook.webhookServerAdmin('session.connected', payload);
+      this.webhook
+        .webhookServerAdmin('session.connected', payload)
+        .catch(() => {});
 
       return payload;
     }
@@ -453,7 +460,9 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
 
     // emit ke websocket dan webhook
     wabot.emit('session.qr_generated', payload);
-    void this.webhook.webhookServerAdmin('session.qr_generated', payload);
+    this.webhook
+      .webhookServerAdmin('session.qr_generated', payload)
+      .catch(() => {});
 
     return payload;
   }
@@ -480,6 +489,8 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
     } as SessionPayload;
 
     wabot.emit('session.disconnected', payload);
-    void this.webhook.webhookServerAdmin('session.disconnected', payload);
+    this.webhook
+      .webhookServerAdmin('session.disconnected', payload)
+      .catch(() => {});
   }
 }

@@ -129,3 +129,20 @@ export function removeHtmlEntities(text: string | null | undefined): string {
   // Menghapus semua entitas HTML (nama, angka, dan hex)
   return text.replace(/&[#a-zA-Z0-9]+;/g, '');
 }
+
+/**
+ * Memformat objek Date menjadi string dengan format "YYYY-MM-DD HH:MM:SS".
+ * @param date Objek Date yang akan diformat
+ * @returns String yang mewakili tanggal dan waktu dalam format "YYYY-MM-DD HH:MM:SS"
+ */
+export function formatDateTime(date?: Date | null): string | null {
+  if (!date) return null;
+  const pad = (n: number) => (n < 10 ? '0' + n : n);
+  const yyyy = date.getFullYear();
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const HH = pad(date.getHours());
+  const ii = pad(date.getMinutes());
+  const ss = pad(date.getSeconds());
+  return `${yyyy}-${mm}-${dd} ${HH}:${ii}:${ss}`;
+}

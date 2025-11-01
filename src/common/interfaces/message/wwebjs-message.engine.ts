@@ -143,7 +143,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -171,7 +173,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     }
   }
 
@@ -256,7 +260,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -284,7 +290,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     }
   }
 
@@ -376,7 +384,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -404,7 +414,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     }
   }
 
@@ -497,7 +509,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         is_webhook_success: true,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
       this.logger.error(`Gagal kirim dokumen: ${errorMsg}`);
@@ -525,7 +539,9 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
         updated_at: message.updated_at,
       };
 
-      void this.webhook.webhookServerAdmin('message.updated', payload);
+      this.webhook
+        .webhookServerAdmin('message.updated', payload)
+        .catch(() => {});
     }
   }
 }

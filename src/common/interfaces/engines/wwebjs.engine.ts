@@ -229,10 +229,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
             connector.sessionAttributes,
             payload,
           )
-          .then(() => {})
           .catch(() => {});
-
-        void this.webhook.webhookServerAdmin('message.updated', payload);
       } catch (error) {
         this.logger.error(
           `Gagal memperbarui status pesan ${messageId} : ${error}`,
@@ -281,7 +278,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
           } as SessionPayload;
 
           wabot.emit('session.qr_timeout', payload);
-          void this.webhook.webhookServerAdmin('session.qr_timeout', payload);
+          this.webhook
+            .webhookServerAdmin('session.qr_timeout', payload)
+            .catch(() => {});
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
@@ -300,7 +299,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
           } as SessionPayload;
 
           wabot.emit('session.disconnected', payload);
-          void this.webhook.webhookServerAdmin('session.disconnected', payload);
+          this.webhook
+            .webhookServerAdmin('session.disconnected', payload)
+            .catch(() => {});
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
@@ -334,7 +335,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       } as SessionPayload;
 
       wabot.emit('session.synchronized', payload);
-      void this.webhook.webhookServerAdmin('session.synchronized', payload);
+      this.webhook
+        .webhookServerAdmin('session.synchronized', payload)
+        .catch(() => {});
     });
 
     client.on('loading_screen', (percent: number, message: string) => {
@@ -350,7 +353,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       } as SessionPayload;
 
       wabot.emit('session.synchronized', payload);
-      void this.webhook.webhookServerAdmin('session.synchronized', payload);
+      this.webhook
+        .webhookServerAdmin('session.synchronized', payload)
+        .catch(() => {});
     });
 
     client.on('auth_failure', (msg) =>
@@ -382,7 +387,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         } as SessionPayload;
 
         wabot.emit('session.error', payload);
-        void this.webhook.webhookServerAdmin('session.error', payload);
+        this.webhook
+          .webhookServerAdmin('session.error', payload)
+          .catch(() => {});
       }
     };
 
@@ -407,7 +414,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         } as SessionPayload;
 
         wabot.emit('session.connected', payload);
-        void this.webhook.webhookServerAdmin('session.connected', payload);
+        this.webhook
+          .webhookServerAdmin('session.connected', payload)
+          .catch(() => {});
         resolve();
       });
     });
@@ -454,7 +463,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         } as SessionPayload;
 
         wabot.emit('session.error', payload);
-        void this.webhook.webhookServerAdmin('session.error', payload);
+        this.webhook
+          .webhookServerAdmin('session.error', payload)
+          .catch(() => {});
 
         // Do not rethrow - return a payload to caller so server flow continues
         return payload;
@@ -472,7 +483,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       } as SessionPayload;
 
       wabot.emit('session.error', payload);
-      void this.webhook.webhookServerAdmin('session.error', payload);
+      this.webhook.webhookServerAdmin('session.error', payload).catch(() => {});
 
       return payload;
     }
@@ -489,7 +500,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
 
       // emit ke websocket dan webhook
       wabot.emit('session.connected', payload);
-      void this.webhook.webhookServerAdmin('session.connected', payload);
+      this.webhook
+        .webhookServerAdmin('session.connected', payload)
+        .catch(() => {});
 
       return payload;
     }
@@ -506,7 +519,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
 
     // emit ke websocket dan webhook
     wabot.emit('session.qr_generated', payload);
-    void this.webhook.webhookServerAdmin('session.qr_generated', payload);
+    this.webhook
+      .webhookServerAdmin('session.qr_generated', payload)
+      .catch(() => {});
 
     return payload;
   }
@@ -533,7 +548,9 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
     } as SessionPayload;
 
     wabot.emit('session.disconnected', payload);
-    void this.webhook.webhookServerAdmin('session.disconnected', payload);
+    this.webhook
+      .webhookServerAdmin('session.disconnected', payload)
+      .catch(() => {});
   }
 
   private removeAuthState(sessionId: string): void {
