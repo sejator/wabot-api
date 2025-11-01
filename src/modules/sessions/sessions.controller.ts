@@ -55,7 +55,7 @@ export class SessionsController {
    * Mengembalikan objek { ok: boolean, message: string, sessionId?: string }
    */
   @Delete(':id/force')
-  forceDelete(@Param('id') id: string) {
-    return this.sessions.forceDelete(id);
+  async forceDelete(@Param('id') id: string) {
+    return await this.sessions.forceDelete(id);
   }
 }

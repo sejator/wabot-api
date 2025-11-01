@@ -207,8 +207,19 @@ export class SessionsService implements OnModuleInit {
     }
   }
 
-  forceDelete(session_id: string) {
+  async forceDelete(session_id: string) {
     const connectorExists = this.connectorRegistry.has(session_id);
+    await this.prisma.session.update({
+      where: { id: session_id },
+      data: {
+        connected: false,
+        auth_state: Prisma.DbNull,
+      },
+    });
+
+    await this.prisma.authKey.deleteMany({
+      where: { session_id },
+    });
     if (connectorExists) {
       this.connectorRegistry.unregister(session_id);
       this.logger.warn(`Force deleted connector for session: ${session_id}`);
