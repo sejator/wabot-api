@@ -60,9 +60,7 @@ export class SessionsService implements OnModuleInit {
 
     try {
       const attributes = dto.attributes
-        ? {
-            ...dto.attributes,
-          }
+        ? (dto.attributes as unknown as Prisma.InputJsonValue)
         : Prisma.DbNull;
 
       const session = await this.prisma.session.upsert({
@@ -92,13 +90,15 @@ export class SessionsService implements OnModuleInit {
       throw new BadRequestException(`Unsupported engine type: ${dto.engine}`);
     }
     try {
+      const attributes = dto.attributes
+        ? (dto.attributes as unknown as Prisma.InputJsonValue)
+        : Prisma.DbNull;
+
       const updatedSession = await this.prisma.session.update({
         where: { id },
         data: {
           engine: dto.engine,
-          attributes: {
-            ...dto.attributes,
-          },
+          attributes: attributes,
         },
       });
 

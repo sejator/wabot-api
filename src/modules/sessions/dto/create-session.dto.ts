@@ -6,28 +6,9 @@ import {
   IsInt,
   Min,
   IsUrl,
-  Validate,
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { EngineType } from 'src/common/types/session.type';
-
-@ValidatorConstraint({ name: 'WebhookRelation', async: false })
-class WebhookRelationConstraint implements ValidatorConstraintInterface {
-  validate(_: any, args: ValidationArguments) {
-    const obj = args.object as SessionAttributesDto;
-    if (obj.webhook_status && !obj.webhook_incoming) {
-      return false;
-    }
-    return true;
-  }
-
-  defaultMessage(args: ValidationArguments) {
-    return `webhook_incoming harus diisi jika webhook_status aktif ${args.property}`;
-  }
-}
 
 class SessionAttributesDto {
   @IsOptional()
@@ -46,9 +27,6 @@ class SessionAttributesDto {
   @IsOptional()
   @IsString({ message: 'webhook_secret harus berupa string' })
   webhook_secret?: string;
-
-  @Validate(WebhookRelationConstraint)
-  relationValidator: boolean;
 }
 
 export class CreateSessionDto {
