@@ -108,7 +108,7 @@ export class WebhookService {
               'X-Webhook-Event': event,
               'X-Webhook-Signature': signature,
             },
-            timeout: 5000, // fail-safe, 5 detik (timeout cepat untuk webhook)
+            timeout: 10000, // fail-safe, 10 detik (timeout cepat untuk webhook)
           },
         ),
       );

@@ -547,7 +547,10 @@ export const useBaileysAuthState = async (
         return Promise.resolve(out);
       },
 
+      // Menyimpan dengan auto cleanup untuk kategori besar
       set: async (data: SignalDataSet): Promise<void> => {
+        const MAX_SESSION_KEYS = 50; // batas jumlah sesi yang disimpan
+
         for (const category of Object.keys(data) as Array<
           keyof SignalDataTypeMap
         >) {
@@ -560,47 +563,36 @@ export const useBaileysAuthState = async (
             if (val == null) {
               delete authState.keys[category][id];
             } else {
-              // Try to convert protobuf instances to plain objects
-              if (typeof val === 'object' && val !== null) {
-                const objWithToJSON = val as Record<string, unknown>;
-                // Check for toJSON method
-                if (
-                  'toJSON' in objWithToJSON &&
-                  typeof objWithToJSON.toJSON === 'function'
-                ) {
-                  try {
-                    const jsonResult = (
-                      objWithToJSON.toJSON as () => unknown
-                    )();
-                    authState.keys[category][id] = jsonResult;
-                    continue;
-                  } catch {
-                    // fallthrough
-                  }
-                }
-                // Check for toObject method
-                if (
-                  'toObject' in objWithToJSON &&
-                  typeof objWithToJSON.toObject === 'function'
-                ) {
-                  try {
-                    const objectResult = (
-                      objWithToJSON.toObject as () => unknown
-                    )();
-                    authState.keys[category][id] = objectResult;
-                    continue;
-                  } catch {
-                    // fallthrough
-                  }
-                }
-              }
               authState.keys[category][id] = val;
             }
           }
+
+          // Auto cleanup: hapus entry lama pada kategori besar
+          const keysCount = Object.keys(authState.keys[category] ?? {}).length;
+          if (
+            ['session', 'app-state-sync-key', 'sender-key'].includes(
+              category,
+            ) &&
+            keysCount > MAX_SESSION_KEYS
+          ) {
+            const allKeys = Object.keys(authState.keys[category]);
+            const toDelete = allKeys.slice(0, keysCount - MAX_SESSION_KEYS);
+            for (const keyId of toDelete)
+              delete authState.keys[category][keyId];
+          }
         }
 
-        // persist
-        await persistAuthStateToDb(authState);
+        const minimalAuthState = {
+          creds: authState.creds,
+          keys: {
+            // hanya simpan kategori penting
+            'pre-key': authState.keys['pre-key'],
+            session: authState.keys['session'],
+            'app-state-sync-key': authState.keys['app-state-sync-key'],
+          },
+        };
+
+        await persistAuthStateToDb(minimalAuthState);
       },
     },
   };
