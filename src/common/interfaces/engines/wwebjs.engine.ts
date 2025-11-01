@@ -18,7 +18,6 @@ import {
   getAppVersion,
   stringifyError,
 } from 'src/common/utils/general.util';
-import * as fs from 'fs';
 import * as path from 'path';
 import {
   MessagePayload,
@@ -104,6 +103,14 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
     this.logger.log(`Session ${session.id} registered in connector registry.`);
   }
 
+  /**
+   * Menangani event disconnect dari WWebJS Client.
+   *
+   * - Menutup semua resource (page & browser).
+   * - Menghapus auth state hanya jika logout manual.
+   * - Menandai session sebagai disconnected di DB.
+   * - Membersihkan registry.
+   */
   private async handleClientDisconnected(
     sessionId: string,
     reason: string,
@@ -112,6 +119,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
     this.logger.warn(`Session ${sessionId} disconnected: ${reason}`);
 
     try {
+      // Tutup page & browser jika masih hidup
       if (client.pupPage && !client.pupPage.isClosed()) {
         await client.pupPage.close().catch(() => null);
       }
@@ -120,25 +128,40 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         await client.pupBrowser.close().catch(() => null);
       }
 
-      await client.destroy().catch((err) => {
+      await client.destroy().catch(() => null);
+
+      // Hapus folder auth kalau logout manual ATAU gagal login QR
+      if (
+        reason?.toUpperCase().includes('LOGOUT') ||
+        reason?.toUpperCase().includes('QRCODE') ||
+        reason?.toUpperCase().includes('RETRIES')
+      ) {
+        await this.removeAuthState(sessionId);
         this.logger.warn(
-          `Destroy client safely ignored: ${stringifyError(err)}`,
+          `Auth state for ${sessionId} removed due to ${reason}.`,
         );
-      });
+      }
     } catch (err) {
       this.logger.error(
-        `Error during client destroy for ${sessionId}: ${stringifyError(err)}`,
+        `Error during client cleanup for ${sessionId}: ${stringifyError(err)}`,
       );
     } finally {
-      this.removeAuthState(sessionId);
-      // Update connected state jadi false jika terputus atau gagal login
-      await this.prisma.session.update({
-        where: { name: sessionId },
-        data: { connected: false, auth_state: Prisma.DbNull },
-      });
+      // Update status session di database
+      await this.prisma.session
+        .update({
+          where: { id: sessionId },
+          data: { connected: false, auth_state: Prisma.DbNull },
+        })
+        .catch((dbErr) =>
+          this.logger.warn(
+            `Failed updating session state for ${sessionId}: ${stringifyError(dbErr)}`,
+          ),
+        );
+
+      // Unregister dari registry internal
       if (this.connectorRegistry.has(sessionId)) {
         this.connectorRegistry.unregister(sessionId);
-        this.logger.warn(`Session ${sessionId} cleaned up after disconnect.`);
+        this.logger.warn(`Session ${sessionId} cleaned up from registry.`);
       }
     }
   }
@@ -243,7 +266,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
   }
 
   async connect(session: Session): Promise<SessionPayload> {
-    // const sessionId = session.id;
+    const sessionId = session.id;
     const sessionName = session.name;
     const versionInfo = await getAppVersion();
 
@@ -252,7 +275,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       qrMaxRetries: this.maxQrRetry,
       deviceName: `SendNotif v${versionInfo}`,
       authStrategy: new LocalAuth({
-        clientId: sessionName,
+        clientId: sessionId,
         dataPath: process.env.WWEBJS_SESSION_PATH || './.wabot_auth',
       }),
       puppeteer: {
@@ -267,7 +290,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
     });
 
     client.on('disconnected', (reason) => {
-      void this.handleClientDisconnected(sessionName, reason, client);
+      void this.handleClientDisconnected(sessionId, reason, client);
       // console.log(`Client disconnected:`, { reason });
 
       try {
@@ -315,17 +338,17 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
 
     client.on(
       'error',
-      (error) => void this.handleClientError(sessionName, error),
+      (error) => void this.handleClientError(sessionId, error),
     );
 
     client.on(
       'message',
-      (msg) => void this.handleMessageReceived(sessionName, msg),
+      (msg) => void this.handleMessageReceived(sessionId, msg),
     );
 
     client.on(
       'message_ack',
-      (msg, ack) => void this.handleMessageAck(sessionName, msg, ack),
+      (msg, ack) => void this.handleMessageAck(sessionId, msg, ack),
     );
 
     client.on('authenticated', () => {
@@ -557,30 +580,20 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       .catch(() => {});
   }
 
-  private removeAuthState(sessionId: string): void {
-    const timeoutId = setTimeout(() => {
-      try {
-        const authPath = path.join(
-          process.cwd(),
-          process.env.WWEBJS_SESSION_PATH || './.wabot_auth',
-          `session-${sessionId}`,
-        );
+  private async removeAuthState(sessionId: string) {
+    const fs = await import('fs/promises');
 
-        if (fs.existsSync(authPath)) {
-          fs.rmSync(authPath, { recursive: true, force: true });
-          this.logger.log(`LocalAuth folder deleted for session ${sessionId}`);
-        } else {
-          this.logger.warn(
-            `Auth folder for session ${sessionId} not found — skipping`,
-          );
-        }
-      } catch (err) {
-        this.logger.error(
-          `Failed to remove auth state for session ${sessionId}: ${err}`,
-        );
-      } finally {
-        clearTimeout(timeoutId);
-      }
-    }, 5000); // Delay 5 detik sebelum menghapus folder
+    const sessionPath = path.join(
+      process.env.WWEBJS_SESSION_PATH || './.wabot_auth',
+      `session-${sessionId}`,
+    );
+    try {
+      await fs.rm(sessionPath, { recursive: true, force: true });
+      this.logger.log(`Session folder deleted: ${sessionPath}`);
+    } catch (err) {
+      this.logger.warn(
+        `Failed to delete session folder for ${sessionId}: ${stringifyError(err)}`,
+      );
+    }
   }
 }
