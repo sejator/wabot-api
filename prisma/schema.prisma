@@ -25,6 +25,8 @@ model Session {
   updated_at DateTime  @updatedAt
   messages   Message[]
 
+  auth_keys AuthKey[] @relation("SessionAuthKeys", fields: [], references: [])
+
   @@map("sessions")
 }
 
@@ -48,4 +50,27 @@ model Message {
   updated_at    DateTime  @updatedAt
 
   @@map("messages")
+}
+
+model AuthKey {
+  id         String  @id @default(uuid())
+  session    Session @relation("SessionAuthKeys", fields: [session_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  session_id String
+
+  // category/type of key: 'pre-key' | 'session' | 'sender-key' | 'app-state-sync-key'
+  category String
+
+  // id within the category (e.g., pre-key numeric id, session ID string)
+  key_id String
+
+  // stored payload, using JSONB to allow BufferJSON-serialized content
+  value Json
+
+  // insertion timestamp for simple LRU-like pruning
+  created_at DateTime @default(now())
+
+  @@unique([session_id, category, key_id])
+  @@index([session_id, category])
+  @@index([session_id, category, key_id])
+  @@map("auth_keys")
 }

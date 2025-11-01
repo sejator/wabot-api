@@ -19,7 +19,7 @@ import {
   BaileysConnector,
   SessionAttributes,
 } from 'src/common/types/session.type';
-import { useBaileysAuthState } from 'src/common/utils/use-baileys-auth-state';
+import { useBaileysAuthState } from 'src/common/utils/baileys-auth';
 import { formatDateTime, getAppVersion } from 'src/common/utils/general.util';
 import {
   destroyAllListeners,
