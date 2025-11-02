@@ -11,8 +11,12 @@ services:
       - WWEBJS_SESSION_PATH=/app/.wabot_auth
       - WWEBJS_CACHE_PATH=/app/.wwebjs_cache
     volumes:
-      - "${WWEBJS_SESSION_PATH}:/app/.wabot_auth"
-      - "${WWEBJS_CACHE_PATH}:/app/.wwebjs_cache"
+      - "${WWEBJS_SESSION_PATH:-./.wabot_auth}:/app/.wabot_auth"
+      - "${WWEBJS_CACHE_PATH:-./.wwebjs_cache}:/app/.wwebjs_cache"
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - wabot_network
+
+networks:
+  wabot_network:
+    external: true
