@@ -4,7 +4,7 @@
 # ==========================================================
 
 NETWORK_NAME="wabot_network"
-HOST_IP=$(hostname -I | awk '{print $1}')  # IP host utama
+CURRENT_DIR=$(pwd) # lokasi direktori saat ini
 
 echo "Mendeteksi versi PostgreSQL yang terinstal..."
 PG_VERSION=$(psql -V 2>/dev/null | awk '{print $3}' | cut -d. -f1)
@@ -69,9 +69,9 @@ fi
 REDIS_PASS=$(openssl rand -base64 24)
 
 if [ -f "${REDIS_CONF_PATH}" ]; then
-  echo "Mengatur Redis agar bind ke 127.0.0.1 dan ${HOST_IP}..."
+  echo "Mengatur Redis agar bind ke 127.0.0.1 dan ${GATEWAY_IP}..."
 
-  sudo sed -i "s/^bind .*/bind 127.0.0.1 ${HOST_IP}/" "${REDIS_CONF_PATH}"
+  sudo sed -i "s/^bind .*/bind 127.0.0.1 ${GATEWAY_IP}/" "${REDIS_CONF_PATH}"
 
   if grep -q "^requirepass" "${REDIS_CONF_PATH}"; then
     sudo sed -i "s/^requirepass .*/requirepass ${REDIS_PASS}/" "${REDIS_CONF_PATH}"
@@ -80,7 +80,7 @@ if [ -f "${REDIS_CONF_PATH}" ]; then
   fi
 
   sudo systemctl restart redis
-  echo "Redis dikonfigurasi untuk listen pada 127.0.0.1 dan ${HOST_IP}"
+  echo "Redis dikonfigurasi untuk listen pada 127.0.0.1 dan ${GATEWAY_IP}"
 else
   echo "File konfigurasi Redis tidak ditemukan di ${REDIS_CONF_PATH}"
 fi
@@ -103,11 +103,11 @@ else
 
   sed -i "s|^PORT=.*|PORT=3000|" .env
   sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://postgres:password@${GATEWAY_IP}:5432/wabot_db|" .env
-  sed -i "s|^REDIS_HOST=.*|REDIS_HOST=${HOST_IP}|" .env
+  sed -i "s|^REDIS_HOST=.*|REDIS_HOST=${GATEWAY_IP}|" .env
   sed -i "s|^REDIS_PORT=.*|REDIS_PORT=6379|" .env
   sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASS}|" .env
-  sed -i "s|^WWEBJS_SESSION_PATH=.*|WWEBJS_SESSION_PATH=./.wabot_auth|" .env
-  sed -i "s|^WWEBJS_CACHE_PATH=.*|WWEBJS_CACHE_PATH=./.wwebjs_cache|" .env
+  sed -i "s|^WWEBJS_SESSION_PATH=.*|WWEBJS_SESSION_PATH=${CURRENT_DIR}/.wabot_auth|" .env
+  sed -i "s|^WWEBJS_CACHE_PATH=.*|WWEBJS_CACHE_PATH=${CURRENT_DIR}/.wwebjs_cache|" .env
   echo "File .env berhasil diperbarui dengan konfigurasi terkini."
 fi
 
@@ -121,10 +121,13 @@ echo "=================================================="
 echo ""
 echo "Network     : ${NETWORK_NAME}"
 echo "PostgreSQL  : ${GATEWAY_IP}:5432"
-echo "Redis       : ${HOST_IP}:6379"
+echo "Redis       : ${GATEWAY_IP}:6379"
 echo ""
 echo "Redis Password (simpan dengan aman):"
 echo "${REDIS_PASS}"
+echo ""
+echo "WWEBJS_SESSION_PATH: ${CURRENT_DIR}/.wabot_auth"
+echo "WWEBJS_CACHE_PATH  : ${CURRENT_DIR}/.wwebjs_cache"
 echo ""
 echo "Tambahkan konfigurasi network ke docker-compose.yml:"
 echo "--------------------------------------------------"
