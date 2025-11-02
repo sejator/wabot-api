@@ -107,6 +107,8 @@ export class WebhookService {
               'User-Agent': `SendNotif/1.0 (+${process.env.APP_URL || ''})`,
               'X-Webhook-Event': event,
               'X-Webhook-Signature': signature,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
             },
             timeout: 10000, // fail-safe, 10 detik (timeout cepat untuk webhook)
           },
