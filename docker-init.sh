@@ -127,9 +127,9 @@ else
   fi
 
   sed -i "s|^PORT=.*|PORT=3000|" .env
-  sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://postgres:password@${GATEWAY_IP}:5432/wabot_db|" .env
-  sed -i "s|^REDIS_URL=.*|REDIS_URL=redis://:${REDIS_PASS}@${GATEWAY_IP}:6379|" .env
-  sed -i "s|^REDIS_HOST=.*|REDIS_HOST=${GATEWAY_IP}|" .env
+  sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://postgres:password@host.docker.internal:5432/wabot_db|" .env
+  sed -i "s|^REDIS_URL=.*|REDIS_URL=redis://:${REDIS_PASS}@host.docker.internal:6379|" .env
+  sed -i "s|^REDIS_HOST=.*|REDIS_HOST=host.docker.internal|" .env
   sed -i "s|^REDIS_PORT=.*|REDIS_PORT=6379|" .env
   sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASS}|" .env
   sed -i "s|^WWEBJS_SESSION_PATH=.*|WWEBJS_SESSION_PATH=${CURRENT_DIR}/.wabot_auth|" .env
