@@ -103,6 +103,7 @@ else
 
   sed -i "s|^PORT=.*|PORT=3000|" .env
   sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://postgres:password@${GATEWAY_IP}:5432/wabot_db|" .env
+  sed -i "s|^REDIS_URL=.*|REDIS_URL=redis://:${REDIS_PASS}@${GATEWAY_IP}:6379|" .env
   sed -i "s|^REDIS_HOST=.*|REDIS_HOST=${GATEWAY_IP}|" .env
   sed -i "s|^REDIS_PORT=.*|REDIS_PORT=6379|" .env
   sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASS}|" .env
