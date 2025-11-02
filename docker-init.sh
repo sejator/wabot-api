@@ -4,9 +4,11 @@
 # ==========================================================
 
 NETWORK_NAME="wabot_network"
-CURRENT_DIR=$(pwd) # lokasi direktori saat ini
+CURRENT_DIR=$(pwd)
+BACKUP_DIR="/etc/docker-config-backup"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
-echo "Mendeteksi versi PostgreSQL yang terinstal..."
+echo "Mendeteksi versi PostgreSQL..."
 PG_VERSION=$(psql -V 2>/dev/null | awk '{print $3}' | cut -d. -f1)
 
 if [ -z "$PG_VERSION" ]; then
@@ -24,7 +26,7 @@ echo ""
 # ==========================================================
 # Buat Docker network jika belum ada
 # ==========================================================
-echo "Mengecek network '${NETWORK_NAME}'..."
+echo "Mengecek Docker network '${NETWORK_NAME}'..."
 if ! docker network ls | grep -q "${NETWORK_NAME}"; then
   docker network create --driver bridge "${NETWORK_NAME}"
   echo "Network '${NETWORK_NAME}' berhasil dibuat."
@@ -32,7 +34,7 @@ else
   echo "Network '${NETWORK_NAME}' sudah ada."
 fi
 
-# Dapatkan subnet & gateway network dari Docker
+# Dapatkan subnet & gateway
 SUBNET=$(docker network inspect "${NETWORK_NAME}" -f '{{(index .IPAM.Config 0).Subnet}}')
 GATEWAY_IP=$(docker network inspect "${NETWORK_NAME}" -f '{{(index .IPAM.Config 0).Gateway}}')
 
@@ -44,37 +46,60 @@ else
 fi
 
 # ==========================================================
-# Konfigurasi PostgreSQL listen address & akses
+# Buat folder backup konfigurasi
+# ==========================================================
+sudo mkdir -p "${BACKUP_DIR}"
+
+# ==========================================================
+# Backup & Konfigurasi PostgreSQL
 # ==========================================================
 if [ -f "${PG_CONF_PATH}" ]; then
-  echo "Mengatur PostgreSQL agar listen hanya pada localhost dan ${GATEWAY_IP}..."
+  echo "Membuat backup konfigurasi PostgreSQL..."
+  sudo cp "${PG_CONF_PATH}" "${BACKUP_DIR}/postgresql.conf.bak_${TIMESTAMP}"
+  sudo cp "${PG_HBA_PATH}" "${BACKUP_DIR}/pg_hba.conf.bak_${TIMESTAMP}"
 
-  sudo sed -i "s/^#listen_addresses.*/listen_addresses = '127.0.0.1,${GATEWAY_IP}'/" "${PG_CONF_PATH}"
-  sudo sed -i "s/^listen_addresses.*/listen_addresses = '127.0.0.1,${GATEWAY_IP}'/" "${PG_CONF_PATH}"
+  echo "Mengatur PostgreSQL agar listen hanya di 127.0.0.1 dan ${GATEWAY_IP}..."
+
+  if grep -q "^listen_addresses" "${PG_CONF_PATH}"; then
+    sudo sed -i "s|^listen_addresses.*|listen_addresses = '127.0.0.1,${GATEWAY_IP}'|" "${PG_CONF_PATH}"
+  elif grep -q "^#listen_addresses" "${PG_CONF_PATH}"; then
+    sudo sed -i "s|^#listen_addresses.*|listen_addresses = '127.0.0.1,${GATEWAY_IP}'|" "${PG_CONF_PATH}"
+  else
+    echo "listen_addresses = '127.0.0.1,${GATEWAY_IP}'" | sudo tee -a "${PG_CONF_PATH}" > /dev/null
+  fi
 
   if [ -n "$SUBNET" ] && ! grep -q "${SUBNET}" "${PG_HBA_PATH}"; then
     echo "host    all             all             ${SUBNET}           md5" | sudo tee -a "${PG_HBA_PATH}" > /dev/null
     echo "Menambahkan rule akses untuk subnet ${SUBNET}"
+  else
+    echo "Rule akses untuk subnet ${SUBNET} sudah ada."
   fi
 
   sudo systemctl restart postgresql
-  echo "PostgreSQL dikonfigurasi hanya untuk listen di localhost dan ${GATEWAY_IP}"
+  echo "PostgreSQL dikonfigurasi dengan benar."
 else
   echo "File konfigurasi PostgreSQL tidak ditemukan di ${PG_CONF_PATH}"
 fi
 
 # ==========================================================
-# Konfigurasi Redis
+# Backup & Konfigurasi Redis
 # ==========================================================
 REDIS_PASS=$(openssl rand -base64 24)
 
 if [ -f "${REDIS_CONF_PATH}" ]; then
+  echo "Membuat backup konfigurasi Redis..."
+  sudo cp "${REDIS_CONF_PATH}" "${BACKUP_DIR}/redis.conf.bak_${TIMESTAMP}"
+
   echo "Mengatur Redis agar bind ke 127.0.0.1 dan ${GATEWAY_IP}..."
 
-  sudo sed -i "s/^bind .*/bind 127.0.0.1 ${GATEWAY_IP}/" "${REDIS_CONF_PATH}"
+  if grep -q "^bind" "${REDIS_CONF_PATH}"; then
+    sudo sed -i "s|^bind .*|bind 127.0.0.1 ${GATEWAY_IP}|" "${REDIS_CONF_PATH}"
+  else
+    echo "bind 127.0.0.1 ${GATEWAY_IP}" | sudo tee -a "${REDIS_CONF_PATH}" > /dev/null
+  fi
 
   if grep -q "^requirepass" "${REDIS_CONF_PATH}"; then
-    sudo sed -i "s/^requirepass .*/requirepass ${REDIS_PASS}/" "${REDIS_CONF_PATH}"
+    sudo sed -i "s|^requirepass .*|requirepass ${REDIS_PASS}|" "${REDIS_CONF_PATH}"
   else
     echo "requirepass ${REDIS_PASS}" | sudo tee -a "${REDIS_CONF_PATH}" > /dev/null
   fi
@@ -98,7 +123,7 @@ else
     cp .env.example .env
     echo "File .env dibuat dari .env.example"
   else
-    echo "File .env sudah ada, tidak di-overwrite."
+    echo "File .env sudah ada, hanya diperbarui."
   fi
 
   sed -i "s|^PORT=.*|PORT=3000|" .env
@@ -109,7 +134,7 @@ else
   sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASS}|" .env
   sed -i "s|^WWEBJS_SESSION_PATH=.*|WWEBJS_SESSION_PATH=${CURRENT_DIR}/.wabot_auth|" .env
   sed -i "s|^WWEBJS_CACHE_PATH=.*|WWEBJS_CACHE_PATH=${CURRENT_DIR}/.wwebjs_cache|" .env
-  echo "File .env berhasil diperbarui dengan konfigurasi terkini."
+  echo "File .env berhasil diperbarui dengan konfigurasi terbaru."
 fi
 
 # ==========================================================
@@ -119,18 +144,19 @@ echo ""
 echo "=================================================="
 echo "SETUP SELESAI"
 echo "=================================================="
-echo ""
 echo "Network     : ${NETWORK_NAME}"
 echo "PostgreSQL  : ${GATEWAY_IP}:5432"
 echo "Redis       : ${GATEWAY_IP}:6379"
 echo ""
-echo "Redis Password (simpan dengan aman):"
+echo "Redis Password:"
 echo "${REDIS_PASS}"
 echo ""
 echo "WWEBJS_SESSION_PATH: ${CURRENT_DIR}/.wabot_auth"
 echo "WWEBJS_CACHE_PATH  : ${CURRENT_DIR}/.wwebjs_cache"
 echo ""
-echo "Tambahkan konfigurasi network ke docker-compose.yml:"
+echo "Backup konfigurasi disimpan di: ${BACKUP_DIR}"
+echo ""
+echo "Tambahkan ke docker-compose.yml:"
 echo "--------------------------------------------------"
 echo "services:"
 echo "  wabot-api:"
