@@ -15,7 +15,7 @@ services:
       - "${WWEBJS_CACHE_PATH:-./.wwebjs_cache}:/app/.wwebjs_cache"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    restart: unless-stopped
+    restart: always
     networks:
       - wabot_network
 
