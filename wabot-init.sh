@@ -11,29 +11,62 @@ BACKUP_DIR="/etc/docker-config-backup"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # ==========================================================
-# Cek & instal dependency
+# Deteksi OS
 # ==========================================================
-echo "Memeriksa requirement sistem..."
+if [ -f /etc/os-release ]; then
+  . /etc/os-release
+  OS_NAME=$ID
+  OS_CODENAME=${UBUNTU_CODENAME:-$VERSION_CODENAME}
+else
+  echo "Tidak dapat mendeteksi OS. Pastikan file /etc/os-release ada."
+  exit 1
+fi
 
+echo "Mendeteksi sistem operasi: $PRETTY_NAME"
+
+# ==========================================================
+# Fungsi install dependency
+# ==========================================================
 install_if_missing() {
   local pkg_name="$1"
   local pkg_install="$2"
 
-  # Khusus untuk Docker
+  # --------------------------------------
+  # Instalasi Docker
+  # --------------------------------------
   if [ "$pkg_name" = "docker" ]; then
     if ! command -v docker &> /dev/null; then
       echo "Docker belum terinstal. Menginstal Docker..."
-      sudo apt-get update
+
+      sudo apt-get update -qq
       sudo apt-get install -y ca-certificates curl gnupg lsb-release
-      sudo mkdir -p /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+      sudo install -m 0755 -d /etc/apt/keyrings
+
+      # menentukan repo Docker berdasarkan OS
+      if [[ "$OS_NAME" == "ubuntu" ]]; then
+        DOCKER_URL="https://download.docker.com/linux/ubuntu"
+      elif [[ "$OS_NAME" == "debian" ]]; then
+        DOCKER_URL="https://download.docker.com/linux/debian"
+      else
+        echo "OS $OS_NAME belum didukung otomatis untuk instalasi Docker."
+        exit 1
+      fi
+
+      sudo curl -fsSL "${DOCKER_URL}/gpg" -o /etc/apt/keyrings/docker.asc
+      sudo chmod a+r /etc/apt/keyrings/docker.asc
+
       echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
-        | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-      sudo apt-get update
-      sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] ${DOCKER_URL} ${OS_CODENAME} stable" | \
+        sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+      sudo apt-get update -qq
+      sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
       sudo usermod -aG docker "$USER"
-      echo "Docker berhasil diinstal dan user '$USER' ditambahkan ke group docker."
+      sudo systemctl enable docker
+      sudo systemctl restart docker
+      echo "Docker berhasil diinstal dan user '$USER' ditambahkan ke grup docker."
       echo "Silakan logout/login ulang agar group berlaku."
     else
       echo "Docker sudah terinstal."
@@ -41,6 +74,9 @@ install_if_missing() {
     return
   fi
 
+  # --------------------------------------
+  # Instalasi (PostgreSQL, Redis, dsb)
+  # --------------------------------------
   if ! command -v "$pkg_name" &> /dev/null; then
     echo "Menginstal $pkg_name..."
     sudo apt-get update -qq
@@ -51,6 +87,9 @@ install_if_missing() {
   fi
 }
 
+# ==========================================================
+# Jalankan instalasi dependency
+# ==========================================================
 install_if_missing docker
 install_if_missing psql "postgresql postgresql-contrib"
 install_if_missing redis-server "redis"
@@ -108,31 +147,34 @@ else
 fi
 
 # ==========================================================
-# Input interaktif untuk PostgreSQL user, db, dan password
+# Konfigurasi PostgreSQL User & Database
 # ==========================================================
 echo ""
 echo "=== Konfigurasi PostgreSQL User & Database ==="
-
-read -p "Masukkan nama user PostgreSQL baru [default: wabot_user]: " DB_USER
-DB_USER=${DB_USER:-wabot_user}
-
-read -p "Masukkan nama database baru [default: wabot_api]: " DB_NAME
-DB_NAME=${DB_NAME:-wabot_api}
-
-read -s -p "Masukkan password untuk user PostgreSQL (kosong = generate otomatis): " DB_PASS
 echo ""
-if [ -z "$DB_PASS" ]; then
-  DB_PASS=$(openssl rand -base64 16 | tr -dc 'A-Za-z0-9_')
-  echo "Password otomatis dibuat: $DB_PASS"
-fi
 
-echo ""
-read -p "Apakah Anda ingin membuat user & database PostgreSQL sekarang? (y/n): " CONFIRM_CREATE
+read -p "Apakah Anda ingin membuat database PostgreSQL baru sekarang? (y/n): " CONFIRM_CREATE
 
 if [[ "$CONFIRM_CREATE" =~ ^[Yy]$ ]]; then
+  echo ""
+  read -p "Masukkan nama database baru [default: wabot_api]: " DB_NAME
+  DB_NAME=${DB_NAME:-wabot_api}
+
+  read -p "Masukkan nama user PostgreSQL baru [default: wabot_user]: " DB_USER
+  DB_USER=${DB_USER:-wabot_user}
+
+  read -s -p "Masukkan password untuk user PostgreSQL (kosong = generate otomatis): " DB_PASS
+  echo ""
+  if [ -z "$DB_PASS" ]; then
+    DB_PASS=$(openssl rand -base64 16 | tr -dc 'A-Za-z0-9_')
+    echo "Password otomatis dibuat: $DB_PASS"
+  fi
+
+  echo ""
   echo "Membuat user dan database PostgreSQL..."
 
-  sudo -u postgres psql <<EOF
+  # Buat user jika belum ada
+  sudo -u postgres psql -q <<EOF
 DO
 \$do\$
 BEGIN
@@ -141,21 +183,25 @@ BEGIN
    END IF;
 END
 \$do\$;
-
-DO
-\$do\$
-BEGIN
-   IF NOT EXISTS (SELECT FROM pg_database WHERE datname = '${DB_NAME}') THEN
-      CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};
-      GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};
-   END IF;
-END
-\$do\$;
 EOF
+
+  # Buat database jika belum ada
+  DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'")
+  if [ "$DB_EXISTS" != "1" ]; then
+    echo "Membuat database ${DB_NAME}..."
+    sudo -u postgres createdb -O "${DB_USER}" "${DB_NAME}"
+    sudo -u postgres psql -q -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+    echo "Database ${DB_NAME} berhasil dibuat."
+  else
+    echo "Database ${DB_NAME} sudah ada, dilewati."
+  fi
 
   echo "User & database PostgreSQL berhasil dibuat."
 else
   echo "Pembuatan user & database PostgreSQL dilewati."
+  DB_NAME="wabot_api"
+  DB_USER="wabot_user"
+  DB_PASS="password_default"
 fi
 
 # ==========================================================
