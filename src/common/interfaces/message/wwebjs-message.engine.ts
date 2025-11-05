@@ -21,6 +21,7 @@ import axios from 'axios';
 import { MessagePayload } from 'src/common/types/wabot-event.types';
 import { WebhookService } from 'src/modules/webhook/webhook.service';
 import { formatPhoneToJid } from 'src/common/utils/baileys.util';
+import type { Client as WWebJSClient } from 'whatsapp-web.js';
 
 @Injectable()
 export class WWebJSMessageEngine extends AbstractMessageEngine {
@@ -67,6 +68,18 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
     }
 
     return { connector, jid: null };
+  }
+
+  private async sendTyping(
+    wabot: WWebJSClient,
+    jid: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    type?: 'text' | 'image' | 'video' | 'document',
+  ) {
+    const chat = await wabot.getChatById(jid);
+    await chat.sendStateTyping();
+    await delay(2000);
+    await chat.clearState();
   }
 
   /**
@@ -121,6 +134,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
     try {
       if (messageDelay > 0) await delay(messageDelay);
 
+      await this.sendTyping(client, jid, 'text');
       const sent = await client.sendMessage(jid, dto.message);
 
       const message = await this.prisma.message.update({
@@ -236,6 +250,8 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       if (messageDelay > 0) await delay(messageDelay);
 
       const media = await MessageMedia.fromUrl(dto.image);
+
+      await this.sendTyping(client, jid, 'image');
       const sent = await client.sendMessage(jid, media, {
         caption: dto.caption ?? '',
       });
@@ -359,6 +375,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       const base64Video = Buffer.from(response.data).toString('base64');
       const media = new MessageMedia('video/mp4', base64Video, 'video.mp4');
 
+      await this.sendTyping(client, jid, 'video');
       const sent = await client.sendMessage(jid, media, {
         caption: dto.caption ?? '',
         sendMediaAsDocument: true,
@@ -484,6 +501,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       media.mimetype = mimetype;
       media.filename = filename;
 
+      await this.sendTyping(client, jid, 'document');
       const sent = await client.sendMessage(jid, media, {
         caption: dto.caption ?? '',
         sendMediaAsDocument: true,
