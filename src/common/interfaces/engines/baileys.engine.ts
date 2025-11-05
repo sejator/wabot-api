@@ -78,19 +78,20 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
     );
 
     // Bersihkan listener lama jika ada
-    try {
-      const hasConnector = this.connectorRegistry.has(session.id);
-      if (hasConnector) {
-        const existingConnector = this.connectorRegistry.get(session.id);
-        this.logger.warn(
-          `Removing old event listeners for session ${session.id}`,
+    if (this.connectorRegistry.has(session.id)) {
+      const existingConnector = this.connectorRegistry.get(session.id);
+      this.logger.warn(`Cleaning up old listeners & socket for ${session.id}`);
+
+      try {
+        await destroyAllListeners(existingConnector.wabot);
+        await existingConnector.wabot.logout().catch(() => {});
+      } catch (err) {
+        this.logger.error(
+          `Failed to destroy existing session ${session.id}: ${err}`,
         );
-        destroyAllListeners(existingConnector.wabot);
       }
-    } catch (error) {
-      this.logger.error(
-        `Error while removing old event listeners for session ${session.id}: ${error}`,
-      );
+
+      this.connectorRegistry.unregister(session.id);
     }
 
     // default version whatsapp
@@ -174,9 +175,10 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
           // Cek jika sudah melebihi max retry
           if (currentRetry + 1 > this.maxQrRetry) {
             this.logger.warn(
-              `Destroying listeners... Max QR retries exceeded for session ${session.id}`,
+              `QR timeout for session ${session.id} after ${this.qrTimeout / 1000}s (max retries: ${this.maxQrRetry})`,
             );
-            destroyAllListeners(sock);
+
+            await destroyAllListeners(sock);
             this.qrRetryCounter.delete(session.id);
             // Emit session.qr_timeout event
             const payload = {
@@ -258,16 +260,28 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
           resolve(null);
         }
 
-        // Jika koneksi ditutup -> bersihkan
+        // Jika koneksi ditutup -> bersihkan dan coba reconnect jika bukan logout
         if (connection === 'close') {
+          // Bersihkan semua listener agar tidak leak
+          try {
+            await destroyAllListeners(sock);
+          } catch (err) {
+            this.logger.warn(
+              `Failed to destroy socket for ${session.id}: ${err}`,
+            );
+          }
+
+          // Deteksi apakah logout atau koneksi putus biasa
           const shouldReconnect =
             (lastDisconnect?.error as Boom)?.output?.statusCode !==
             (DisconnectReason.loggedOut as number);
 
           if (shouldReconnect) {
+            // Jadwalkan reconnect
             this.logger.warn(`Reconnecting session ${session.id} after 5s...`);
             setTimeout(() => void this.connect(session), 5000);
           } else {
+            // Kalau logout manual: bersihkan dari DB dan registry
             await this.prisma.session.update({
               where: { id: session.id },
               data: { connected: false, auth_state: Prisma.DbNull },
@@ -281,14 +295,13 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             this.connectorRegistry.unregister(session.id);
             this.logger.warn(`Session logged out: ${session.id}`);
 
-            // event session.disconnected
-            const payload = {
+            const payload: SessionPayload = {
               session_id: session.id,
               name: session.name,
               engine: session.engine || 'baileys',
               status: 'disconnected',
               timestamp: formatDateTime(new Date()),
-            } as SessionPayload;
+            };
 
             wabot.emit('session.disconnected', payload);
             this.webhook
@@ -474,7 +487,15 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
 
   async stop(sessionId: string) {
     const connector = this.connectorRegistry.get(sessionId);
-    await connector.wabot.logout();
+    if (!connector) return;
+
+    try {
+      await destroyAllListeners(connector.wabot);
+      await connector.wabot.logout();
+    } catch (err) {
+      this.logger.error(`Error stopping session ${sessionId}: ${err}`);
+    }
+
     this.connectorRegistry.unregister(sessionId);
     await this.updateSessionConnectedState(sessionId, false);
 

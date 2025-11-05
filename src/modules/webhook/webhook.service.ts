@@ -98,6 +98,7 @@ export class WebhookService {
       .digest('hex');
 
     try {
+      // TODO: menggunakan message broker seperti RabbitMQ atau Kafka untuk antrian webhook
       const response = await firstValueFrom(
         this.httpService.post(
           url,
@@ -110,7 +111,7 @@ export class WebhookService {
               'Content-Type': 'application/json',
               Accept: 'application/json',
             },
-            timeout: 10000, // fail-safe, 10 detik (timeout cepat untuk webhook)
+            timeout: 3000, // fail-safe, 3 detik (timeout cepat untuk webhook)
           },
         ),
       );
@@ -121,7 +122,7 @@ export class WebhookService {
     } catch (error) {
       const err = error as AxiosError;
       this.logger.error(
-        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} gagal untuk session ${sessionId}: ${
+        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} -> ${url} gagal untuk session ${sessionId}: ${
           err.response?.status || err.message
         }`,
       );

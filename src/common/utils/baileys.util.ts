@@ -1,4 +1,5 @@
-import { proto, WAMessage, WASocket } from 'baileys';
+import { proto, WAMessage } from 'baileys';
+import type { BaileysEventMap, WASocket } from 'baileys';
 
 /**
  * Format nomor telepon menjadi JID WhatsApp.
@@ -117,16 +118,55 @@ export function mapBaileysStatusMessage(
 }
 
 /**
- * Hapus semua event listener pada socket Baileys
- * @param sock - instance WASocket
+ * Bersihkan semua listener dan tutup socket Baileys dengan aman.
+ * @param sock - Instance WASocket yang akan dibersihkan.
  */
-export function destroyAllListeners(sock: WASocket) {
+export async function destroyAllListeners(sock: WASocket) {
   if (!sock?.ev) return;
-  sock.ev.removeAllListeners('connection.update');
-  sock.ev.removeAllListeners('connection.update');
-  sock.ev.removeAllListeners('messages.upsert');
-  sock.ev.removeAllListeners('messages.update');
 
-  // Tutup koneksi WebSocket
-  void sock.ws.close();
+  // daftar event yang ingin dihapus
+  const events: (keyof BaileysEventMap)[] = [
+    'connection.update',
+    'creds.update',
+    'messaging-history.set',
+    'chats.upsert',
+    'chats.update',
+    'chats.delete',
+    'presence.update',
+    'contacts.upsert',
+    'contacts.update',
+    'messages.delete',
+    'messages.update',
+    'messages.media-update',
+    'messages.upsert',
+    'messages.reaction',
+    'message-receipt.update',
+    'groups.upsert',
+    'groups.update',
+    'group-participants.update',
+    'group.join-request',
+    'blocklist.set',
+    'blocklist.update',
+    'call',
+    'labels.edit',
+    'labels.association',
+    'newsletter.reaction',
+    'newsletter.view',
+    'newsletter-participants.update',
+    'newsletter-settings.update',
+  ];
+
+  for (const ev of events) {
+    try {
+      sock.ev.removeAllListeners(ev);
+    } catch (err) {
+      console.warn(`Gagal menghapus listener untuk ${ev}:`, err);
+    }
+  }
+
+  try {
+    await sock.ws.close();
+  } catch (err) {
+    console.warn('Gagal menutup WebSocket:', err);
+  }
 }

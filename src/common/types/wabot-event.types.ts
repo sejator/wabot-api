@@ -47,7 +47,7 @@ export interface SessionPayload {
     | 'error';
   qrCodeUrl?: string | null;
   timeout?: number | null;
-  timestamp?: string | Date;
+  timestamp?: string | Date | null;
   message?: string;
 }
 
