@@ -13,6 +13,7 @@ services:
     volumes:
       - "${WWEBJS_SESSION_PATH:-./.wabot_auth}:/app/.wabot_auth"
       - "${WWEBJS_CACHE_PATH:-./.wwebjs_cache}:/app/.wwebjs_cache"
+      - "./logs:/app/logs"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: always
