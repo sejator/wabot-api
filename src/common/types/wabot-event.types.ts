@@ -1,12 +1,12 @@
-export type MessageEvent = 'message.updated';
+export type MessageEvent = 'message.updated' | 'message.incoming';
 
 export interface MessagePayload {
   id: string;
   session_id: string;
   name: string;
   engine: string;
-  status: 'sent' | 'delivered' | 'read' | 'failed';
-  to: string;
+  status?: 'sent' | 'delivered' | 'read' | 'failed';
+  to?: string;
   from?: string;
   content_type?: string;
   direction?: 'outgoing' | 'incoming';
@@ -16,6 +16,7 @@ export interface MessagePayload {
   delivered_at?: string | Date | null;
   read_at?: string | Date | null;
   is_webhook_success?: boolean;
+  body?: string | null;
 }
 
 export type SessionEvent =

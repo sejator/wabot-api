@@ -17,6 +17,7 @@ type EventPayloadMap = {
   'session.deleted': SessionPayload;
   'session.error': SessionPayload;
   'message.updated': MessagePayload;
+  'message.incoming': MessagePayload;
 };
 
 export interface TypedWabot {
@@ -56,4 +57,5 @@ export const WABOT_EVENTS: WebhookEvent[] = [
   'session.deleted',
   'session.error',
   'message.updated',
+  'message.incoming',
 ];

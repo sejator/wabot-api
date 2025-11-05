@@ -5,7 +5,7 @@ export type EngineType = 'baileys' | 'wwebjs';
 
 export interface SessionAttributes {
   message_delay?: number;
-  webhook_message?: string;
+  webhook_incoming?: string;
   webhook_status?: string;
   webhook_secret?: string;
 }

@@ -50,16 +50,52 @@ export class WebhookService {
     sessionId: string,
     attributes: SessionAttributes | undefined,
     payload: SessionPayload | MessagePayload,
-  ): Promise<void> {
-    if (!attributes?.webhook_message) return;
+  ): Promise<string | undefined> {
+    if (!attributes?.webhook_incoming) return;
 
-    await this.sendWebhook(
-      attributes.webhook_message,
-      attributes.webhook_secret,
-      event,
-      payload,
-      sessionId,
-    );
+    const body = JSON.stringify({ data: payload });
+    const signature = crypto
+      .createHmac('sha256', attributes.webhook_secret || 'default_secret')
+      .update(body)
+      .digest('hex');
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          attributes.webhook_incoming,
+          { data: payload },
+          {
+            headers: {
+              'User-Agent': `SendNotif/1.0 (+${process.env.APP_URL || ''})`,
+              'X-Webhook-Event': event,
+              'X-Webhook-Signature': signature,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            timeout: 5000, // fail-safe, 5 detik (timeout cepat untuk webhook)
+          },
+        ),
+      );
+
+      const body = response.data as { success: boolean; message: string };
+      if (!body.success) {
+        this.logger.error(
+          `[DEVICE] Incoming -> ${attributes.webhook_incoming} gagal untuk session ${sessionId}: ${response.data}`,
+        );
+        return undefined;
+      }
+
+      // Berhasil, kembalikan pesan dari webhook
+      return body.message;
+    } catch (error) {
+      const err = error as AxiosError;
+      this.logger.error(
+        `[DEVICE] Incoming -> ${attributes.webhook_incoming} gagal untuk session ${sessionId}: ${
+          err.response?.status || err.message
+        }`,
+      );
+      return undefined;
+    }
   }
 
   async webhookServerAdmin(

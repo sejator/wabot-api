@@ -20,7 +20,11 @@ import {
   SessionAttributes,
 } from 'src/common/types/session.type';
 import { useBaileysAuthState } from 'src/common/utils/baileys-auth';
-import { formatDateTime, getAppVersion } from 'src/common/utils/general.util';
+import {
+  delay,
+  formatDateTime,
+  getAppVersion,
+} from 'src/common/utils/general.util';
 import {
   destroyAllListeners,
   mapBaileysStatusMessage,
@@ -318,28 +322,78 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
       const handleMessagesUpsert = async (
         events: BaileysEventMap['messages.upsert'],
       ) => {
-        // console.log('recv messages ', JSON.stringify(upsert, undefined, 2));
+        // Hanya proses tipe 'notify' ('append' untuk pesan lama saat sinkronisasi)
+        if (events.type !== 'notify') return;
 
+        // Hanya proses pesan baru
         for (const msg of events.messages) {
           if (
             msg.message?.conversation ||
             msg.message?.extendedTextMessage?.text
           ) {
+            const text =
+              msg.message?.conversation ||
+              msg.message?.extendedTextMessage?.text;
+
             if (
               !msg.key.fromMe &&
               !isJidNewsletter(msg.key?.remoteJid || undefined)
             ) {
-              // TODO: implement auto-reply or chatbot logic here
-              // console.log('replying to', msg.key.remoteJid);
-              // await sock.readMessages([msg.key]);
-              // await sendMessageWTyping(
-              //   { text: 'Hello there!' },
-              //   msg.key.remoteJid!,
-              // );
+              // siapkan payload untuk webhook
+              const messageTimestamp = new Date();
+
+              const payload: MessagePayload = {
+                id: msg.key.id!,
+                session_id: session.id,
+                name: session.name,
+                engine: session.engine || 'baileys',
+                from: msg.key.remoteJid!,
+                body: text,
+                content_type: 'chat',
+                direction: 'incoming',
+                created_at: formatDateTime(messageTimestamp),
+                updated_at: formatDateTime(messageTimestamp),
+              };
+
+              const response = await this.webhook.incomingMessage(
+                'message.incoming',
+                session.id,
+                session.attributes as SessionAttributes,
+                payload,
+              );
+
+              if (response === undefined) return;
+
+              // Kirim balasan otomatis
+              const jid = msg.key.remoteJid!;
+              await sock.presenceSubscribe(jid);
+              await delay(500);
+              await sock.sendPresenceUpdate('composing', jid);
+              await delay(1000);
+              await sock.sendPresenceUpdate('paused', jid);
+
+              await sock.sendMessage(
+                jid,
+                { text: response },
+                {
+                  quoted: msg,
+                },
+              );
+              await sock.readMessages([msg.key]);
+
+              // untuk update quota di dashboard admin
+              const payloadSent = {
+                ...payload,
+                to: payload.from,
+                is_webhook_success: true,
+              };
+
+              this.webhook
+                .webhookServerAdmin('message.updated', payloadSent)
+                .catch(() => {});
             }
           }
         }
-        return Promise.resolve();
       };
 
       // Fungsi untuk update message status (delivered, read)

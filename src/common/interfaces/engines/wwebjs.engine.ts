@@ -14,6 +14,7 @@ import { REDLOCK } from 'src/modules/redis/redis.module';
 import { Client, LocalAuth, Message, MessageAck } from 'whatsapp-web.js';
 import QRCode from 'qrcode';
 import {
+  delay,
   formatDateTime,
   getAppVersion,
   stringifyError,
@@ -185,9 +186,53 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
 
   private async handleMessageReceived(sessionId: string, msg: Message) {
     if (!msg.fromMe && msg.body) {
-      // this.logger.debug(`Incoming message from ${msg.from}: ${msg.body}`);
-      // TODO: kirim ke webhook
-      return Promise.resolve();
+      const connector = this.connectorRegistry.get(sessionId);
+
+      const payload: MessagePayload = {
+        id: msg.id.id,
+        session_id: sessionId,
+        name: connector.sessionName,
+        engine: connector.engine || 'wwebjs',
+        from: msg.from,
+        body: msg.body,
+        content_type: msg.type,
+        direction: 'incoming',
+        created_at: formatDateTime(
+          msg.timestamp ? new Date(msg.timestamp * 1000) : null,
+        ),
+        updated_at: formatDateTime(
+          msg.timestamp ? new Date(msg.timestamp * 1000) : null,
+        ),
+      };
+
+      const response = await this.webhook.incomingMessage(
+        'message.incoming',
+        sessionId,
+        connector.sessionAttributes,
+        payload,
+      );
+
+      if (response === undefined) return;
+
+      const chat = await msg.getChat();
+      await chat.sendStateTyping();
+      await delay(2000);
+      await chat.clearState();
+
+      // Kirim balasan otomatis
+      await msg.reply(response);
+      await connector.wabot.sendSeen(msg.from);
+
+      // untuk update quota di dashboard admin
+      const payloadSent = {
+        ...payload,
+        to: payload.from,
+        is_webhook_success: true,
+      };
+
+      this.webhook
+        .webhookServerAdmin('message.updated', payloadSent)
+        .catch(() => {});
     }
   }
 
