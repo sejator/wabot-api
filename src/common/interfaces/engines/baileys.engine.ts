@@ -358,7 +358,6 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
               const response = await this.webhook.incomingMessage(
                 'message.incoming',
                 session.id,
-                session.attributes as SessionAttributes,
                 payload,
               );
 

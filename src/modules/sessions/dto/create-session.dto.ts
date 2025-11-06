@@ -27,6 +27,9 @@ class SessionAttributesDto {
   @IsOptional()
   @IsString({ message: 'webhook_secret harus berupa string' })
   webhook_secret?: string;
+
+  @IsOptional()
+  quota?: number | null; // null = unlimited, 0 = tidak bisa kirim
 }
 
 export class CreateSessionDto {

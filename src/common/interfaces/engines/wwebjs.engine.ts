@@ -208,7 +208,6 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       const response = await this.webhook.incomingMessage(
         'message.incoming',
         sessionId,
-        connector.sessionAttributes,
         payload,
       );
 
@@ -600,6 +599,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
 
   async stop(sessionId: string) {
     const connector = this.connectorRegistry.get(sessionId);
+    await connector.wabot.logout();
     await connector.wabot.destroy();
     this.connectorRegistry.unregister(sessionId);
     await this.updateSessionConnectedState(sessionId, false);

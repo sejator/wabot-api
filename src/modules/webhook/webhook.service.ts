@@ -11,12 +11,16 @@ import {
 import { SessionAttributes } from 'src/common/types/session.type';
 import { AxiosError } from 'axios';
 import { FileLoggerService } from 'src/common/logger/file-logger/file-logger.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class WebhookService {
   private readonly logger = new FileLoggerService(WebhookService.name);
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * Kirim webhook status pesan (sent, delivered, failed)
@@ -48,10 +52,22 @@ export class WebhookService {
   async incomingMessage(
     event: MessageEvent,
     sessionId: string,
-    attributes: SessionAttributes | undefined,
     payload: SessionPayload | MessagePayload,
   ): Promise<string | undefined> {
+    // ambil session attributes
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { attributes: true },
+    });
+    const attributes = session?.attributes as SessionAttributes;
+    // kalau url webhook kosong, langsung return
     if (!attributes?.webhook_incoming) return;
+
+    // cek kuota sebelum kirim webhook
+    if (attributes.quota === 0) {
+      this.logger.warn(`[QUOTA] Session ${sessionId} kuota habis`);
+      return undefined;
+    }
 
     const body = JSON.stringify({ data: payload });
     const signature = crypto
@@ -72,7 +88,7 @@ export class WebhookService {
               'Content-Type': 'application/json',
               Accept: 'application/json',
             },
-            timeout: 5000, // fail-safe, 5 detik (timeout cepat untuk webhook)
+            timeout: 5000,
           },
         ),
       );
@@ -147,7 +163,7 @@ export class WebhookService {
               'Content-Type': 'application/json',
               Accept: 'application/json',
             },
-            timeout: 3000, // fail-safe, 3 detik (timeout cepat untuk webhook)
+            timeout: 5000, // fail-safe, 5 detik (timeout cepat untuk webhook)
           },
         ),
       );

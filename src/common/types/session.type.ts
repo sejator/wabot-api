@@ -8,6 +8,7 @@ export interface SessionAttributes {
   webhook_incoming?: string;
   webhook_status?: string;
   webhook_secret?: string;
+  quota?: number | null; // null = unlimited
 }
 export interface BaileysConnector {
   engine: 'baileys';
