@@ -492,11 +492,21 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
     try {
       if (messageDelay > 0) await delay(messageDelay);
 
-      let filename = dto.filename ?? 'document.pdf';
-      if (!filename.includes('.')) filename += '.pdf';
-      const mimetype = mime.getType(filename) ?? 'application/pdf';
+      let filename = dto.filename?.trim() || 'document';
+      if (!filename.includes('.')) {
+        const extFromUrl = dto.document.split('.').pop();
+        if (extFromUrl && extFromUrl.length <= 5) {
+          filename += `.${extFromUrl}`;
+        } else {
+          filename += '.bin';
+        }
+      }
+
+      const mimetype = mime.getType(filename) ?? 'application/octet-stream';
 
       await this.sendTyping(wabot, jid, 'document');
+
+      // kirim file apa pun (ZIP, RAR, XLSX, DOCX, PPTX, dll)
       const result = await wabot.sendMessage(jid, {
         document: { url: dto.document },
         mimetype,
@@ -518,6 +528,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
           status,
         },
       });
+
       const payload: MessagePayload = {
         id: message.id,
         session_id: connector.sessionId,

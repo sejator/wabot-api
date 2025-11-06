@@ -480,6 +480,23 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
       sock.ev.on('messages.update', (messages) => {
         void handleMessageUpdate(messages);
       });
+
+      // TODO: masih debugging untuk event message update
+      sock.ev.on('message-receipt.update', (receipt) => {
+        this.logger.debug(`message.receipt event: ${JSON.stringify(receipt)}`);
+      });
+
+      sock.ev.on('messages.media-update', (media) => {
+        this.logger.debug(
+          `messages.media-update event: ${JSON.stringify(media)}`,
+        );
+      });
+
+      sock.ev.on('messages.delete', (message) => {
+        this.logger.debug(`messages.delete event: ${JSON.stringify(message)}`);
+      });
+
+      // end of event listeners
     });
 
     const qrCodeUrl = await qrCodePromise;
