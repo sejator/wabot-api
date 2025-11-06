@@ -184,19 +184,19 @@ export class SessionsService implements OnModuleInit {
     });
 
     for (const s of sessions) {
-      const engine = this.engineRegistry.get(s.engine ?? 'baileys');
-
-      if (!engine) {
-        continue;
-      }
-
       try {
-        this.logger.log(
-          `Connecting session [${s.name}] using ${engine.name}...`,
-        );
-        void engine.connect(s);
+        const engine = this.engineRegistry.get(s.engine ?? 'baileys');
+        await engine.connect(s);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
-        this.logger.error(`Failed to connect session [${s.name}]: ${err}`);
+        // jika gagal login karena auth invalid, tandai disconnected
+        await this.prisma.session.update({
+          where: { id: s.id },
+          data: { connected: false, auth_state: Prisma.DbNull },
+        });
+        this.logger.warn(
+          `Session [${s.name}] expired or invalid. Marked disconnected.`,
+        );
       }
 
       // Random delay between 1–3 seconds
