@@ -137,7 +137,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         reason?.toUpperCase().includes('QRCODE') ||
         reason?.toUpperCase().includes('RETRIES')
       ) {
-        await this.removeAuthState(sessionId);
+        // await this.removeAuthState(sessionId);
         this.logger.warn(
           `Auth state for ${sessionId} removed due to ${reason}.`,
         );
@@ -584,7 +584,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       engine: session.engine || 'baileys',
       status: 'qr_generated',
       qrCodeUrl: qrCodeUrl,
-      timeout: parseInt(process.env.QRCODE_TIME_OUT || '60', 10) - 3, // untuk sinyal ke client
+      timeout: 60 - 3, // ini sudah fix untuk wwebjs default timeout 60s dikurangi proses generate qr
       timestamp: formatDateTime(new Date()),
     } as SessionPayload;
 
@@ -625,6 +625,10 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
       .catch(() => {});
   }
 
+  /**
+   * Menghapus status autentikasi untuk sebuah sesi dengan cara menghapus folder session-nya.
+   * @param sessionId ID sesi yang ingin dihapus status autentikasinya.
+   */
   private async removeAuthState(sessionId: string) {
     const fs = await import('fs/promises');
 
