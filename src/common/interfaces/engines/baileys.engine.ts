@@ -455,7 +455,6 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             this.webhook
               .statusMessage(
                 'message.updated',
-                session.id,
                 connector.sessionAttributes,
                 payload,
               )

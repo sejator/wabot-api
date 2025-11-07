@@ -12,6 +12,7 @@ import { SessionAttributes } from 'src/common/types/session.type';
 import { AxiosError } from 'axios';
 import { FileLoggerService } from 'src/common/logger/file-logger/file-logger.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WebhookQueueService } from './webhook-queue.service';
 
 @Injectable()
 export class WebhookService {
@@ -20,17 +21,16 @@ export class WebhookService {
   constructor(
     private readonly httpService: HttpService,
     private readonly prisma: PrismaService,
+    private readonly queue: WebhookQueueService,
   ) {}
 
   /**
    * Kirim webhook status pesan (sent, delivered, failed)
-   * @param sessionId ID session aktif
    * @param event Jenis event (message_update)
    * @param payload Data pesan (id, to, from, body, status, timestamp, dll)
    */
   async statusMessage(
     event: MessageEvent,
-    sessionId: string,
     attributes: SessionAttributes | undefined,
     payload: MessagePayload,
   ): Promise<void> {
@@ -40,13 +40,15 @@ export class WebhookService {
     // kirim ke webhook device (jika url webhook diisi)
     if (!attributes?.webhook_status) return;
 
-    await this.sendWebhook(
-      attributes.webhook_status,
-      attributes.webhook_secret,
+    // masukkan ke antrian webhook
+    await this.queue.enqueue({
+      url: attributes.webhook_status,
+      secret: attributes.webhook_secret || 'default_secret',
       event,
       payload,
-      sessionId,
-    );
+      isAdmin: false,
+      createdAt: Date.now(),
+    });
   }
 
   async incomingMessage(
@@ -88,7 +90,7 @@ export class WebhookService {
               'Content-Type': 'application/json',
               Accept: 'application/json',
             },
-            timeout: 5000,
+            timeout: 10000,
           },
         ),
       );
@@ -122,62 +124,14 @@ export class WebhookService {
     const webhookUrl = process.env.WEBHOOK_URL_ADMIN;
     if (!webhookUrl) return;
 
-    await this.sendWebhook(
-      webhookUrl,
+    // masukkan ke antrian webhook
+    await this.queue.enqueue({
+      url: webhookUrl,
       secret,
       event,
       payload,
-      payload.session_id,
-      true,
-    );
-  }
-
-  /**
-   * Fungsi util umum untuk kirim webhook
-   */
-  private async sendWebhook(
-    url: string,
-    secret = 'default_secret',
-    event: string,
-    payload: SessionPayload | MessagePayload,
-    sessionId: string,
-    isAdmin = false,
-  ): Promise<void> {
-    const body = JSON.stringify({ data: payload });
-    const signature = crypto
-      .createHmac('sha256', secret)
-      .update(body)
-      .digest('hex');
-
-    try {
-      // TODO: menggunakan message broker seperti RabbitMQ atau Kafka untuk antrian webhook
-      const response = await firstValueFrom(
-        this.httpService.post(
-          url,
-          { data: payload },
-          {
-            headers: {
-              'User-Agent': `SendNotif/1.0 (+${process.env.APP_URL || ''})`,
-              'X-Webhook-Event': event,
-              'X-Webhook-Signature': signature,
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-            timeout: 5000, // fail-safe, 5 detik (timeout cepat untuk webhook)
-          },
-        ),
-      );
-
-      this.logger.debug(
-        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} -> ${url} [${response.status}]`,
-      );
-    } catch (error) {
-      const err = error as AxiosError;
-      this.logger.error(
-        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} -> ${url} gagal untuk session ${sessionId}: ${
-          err.response?.status || err.message
-        }`,
-      );
-    }
+      isAdmin: true,
+      createdAt: Date.now(),
+    });
   }
 }

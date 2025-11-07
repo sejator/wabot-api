@@ -296,7 +296,6 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         this.webhook
           .statusMessage(
             'message.updated',
-            sessionId,
             connector.sessionAttributes,
             payload,
           )
