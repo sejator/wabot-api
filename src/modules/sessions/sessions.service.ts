@@ -10,7 +10,7 @@ import { delay } from 'src/common/utils/general.util';
 import { Prisma } from 'generated/prisma';
 import { FileLoggerService } from 'src/common/logger/file-logger/file-logger.service';
 import { UpdateSessionDto } from './dto/update-session.dto';
-import { Connector } from 'src/common/types/session.type';
+import { Connector, EngineTypes } from 'src/common/types/session.type';
 import { ConnectorRegistry } from 'src/common/interfaces/engines/connector-registry.service';
 import { EngineManager } from 'src/common/interfaces/engines/engine-manager';
 import { CreateSessionDto } from './dto/create-session.dto';
@@ -54,7 +54,7 @@ export class SessionsService implements OnModuleInit {
   }
 
   async create(dto: CreateSessionDto) {
-    if (!['baileys', 'wwebjs'].includes(dto.engine)) {
+    if (!EngineTypes.includes(dto.engine)) {
       throw new BadRequestException(`Unsupported engine type: ${dto.engine}`);
     }
 
@@ -86,9 +86,10 @@ export class SessionsService implements OnModuleInit {
   }
 
   async update(id: string, dto: UpdateSessionDto) {
-    if (dto.engine && !['baileys', 'wwebjs'].includes(dto.engine)) {
+    if (dto.engine && !EngineTypes.includes(dto.engine)) {
       throw new BadRequestException(`Unsupported engine type: ${dto.engine}`);
     }
+
     try {
       const attributes = dto.attributes
         ? (dto.attributes as unknown as Prisma.InputJsonValue)

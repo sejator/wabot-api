@@ -28,6 +28,7 @@
     "@nestjs/platform-ws": "^11.1.7",
     "@nestjs/schedule": "^6.0.1",
     "@prisma/client": "^6.17.1",
+    "@wppconnect-team/wppconnect": "^1.37.5",
     "axios": "^1.12.2",
     "baileys": "^7.0.0-rc.6",
     "class-transformer": "^0.5.1",

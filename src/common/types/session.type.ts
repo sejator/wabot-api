@@ -1,7 +1,10 @@
 import type { WASocket } from 'baileys';
 import type { Client as WWebJSClient } from 'whatsapp-web.js';
+import type { Whatsapp as WppClient } from '@wppconnect-team/wppconnect';
 
-export type EngineType = 'baileys' | 'wwebjs';
+export const EngineTypes = ['baileys', 'wwebjs', 'wppconnect'] as const;
+
+export type EngineType = (typeof EngineTypes)[number];
 
 export interface SessionAttributes {
   message_delay?: number;
@@ -10,6 +13,10 @@ export interface SessionAttributes {
   webhook_secret?: string;
   quota?: number | null; // null = unlimited
 }
+
+/**
+ * Connector untuk Baileys
+ */
 export interface BaileysConnector {
   engine: 'baileys';
   wabot: WASocket;
@@ -19,6 +26,9 @@ export interface BaileysConnector {
   isConnected(): boolean;
 }
 
+/**
+ * Connector untuk whatsapp-web.js
+ */
 export interface WWebJSConnector {
   engine: 'wwebjs';
   wabot: WWebJSClient;
@@ -28,7 +38,25 @@ export interface WWebJSConnector {
   isConnected(): boolean;
 }
 
-export type Connector = BaileysConnector | WWebJSConnector;
+/**
+ * Connector untuk WPPConnect
+ */
+export interface WppConnectConnector {
+  engine: 'wppconnect';
+  wabot: WppClient;
+  sessionId: string;
+  sessionName: string;
+  sessionAttributes?: SessionAttributes;
+  isConnected(): boolean;
+}
+
+/**
+ * Untuk semua jenis connector
+ */
+export type Connector =
+  | BaileysConnector
+  | WWebJSConnector
+  | WppConnectConnector;
 
 export interface FormatJid {
   jid: string;

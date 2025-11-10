@@ -11,6 +11,7 @@ import { removeHtmlEntities } from 'src/common/utils/general.util';
 import { Connector } from 'src/common/types/session.type';
 import { ConnectorRegistry } from 'src/common/interfaces/engines/connector-registry.service';
 import { WWebJSMessageEngine } from 'src/common/interfaces/message/wwebjs-message.engine';
+import { WppConnectMessageEngine } from 'src/common/interfaces/message/wppconnect-message.engine';
 
 @Injectable()
 export class MessagesService {
@@ -18,6 +19,7 @@ export class MessagesService {
     private readonly connectorRegistry: ConnectorRegistry<Connector>,
     private readonly baileysMessage: BaileysMessageEngine,
     private readonly wwebjsMessage: WWebJSMessageEngine,
+    private readonly wppconnectMessage: WppConnectMessageEngine,
   ) {}
 
   /** Kirim pesan teks */
@@ -29,7 +31,10 @@ export class MessagesService {
       return this.baileysMessage.getSanitizedMessage(message);
     } else if (connector.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendText(dto);
-      return this.baileysMessage.getSanitizedMessage(message);
+      return this.wwebjsMessage.getSanitizedMessage(message);
+    } else if (connector.engine === 'wppconnect') {
+      const message = await this.wppconnectMessage.sendText(dto);
+      return this.wppconnectMessage.getSanitizedMessage(message);
     }
   }
 
@@ -47,6 +52,9 @@ export class MessagesService {
     } else if (connector.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendImage(dto);
       return this.wwebjsMessage.getSanitizedMessage(message);
+    } else if (connector.engine === 'wppconnect') {
+      const message = await this.wppconnectMessage.sendImage(dto);
+      return this.wppconnectMessage.getSanitizedMessage(message);
     }
   }
 
@@ -59,6 +67,9 @@ export class MessagesService {
     } else if (connector.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendVideo(dto);
       return this.wwebjsMessage.getSanitizedMessage(message);
+    } else if (connector.engine === 'wppconnect') {
+      const message = await this.wppconnectMessage.sendVideo(dto);
+      return this.wppconnectMessage.getSanitizedMessage(message);
     }
   }
 
@@ -71,6 +82,9 @@ export class MessagesService {
     } else if (connector.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendDocument(dto);
       return this.wwebjsMessage.getSanitizedMessage(message);
+    } else if (connector.engine === 'wppconnect') {
+      const message = await this.wppconnectMessage.sendDocument(dto);
+      return this.wppconnectMessage.getSanitizedMessage(message);
     }
   }
 }

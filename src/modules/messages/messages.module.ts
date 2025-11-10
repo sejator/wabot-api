@@ -6,6 +6,7 @@ import { SessionsModule } from 'src/modules/sessions/sessions.module';
 import { BaileysMessageEngine } from 'src/common/interfaces/message/baileys-message.engine';
 import { WWebJSMessageEngine } from 'src/common/interfaces/message/wwebjs-message.engine';
 import { WebhookModule } from '../webhook/webhook.module';
+import { WppConnectMessageEngine } from 'src/common/interfaces/message/wppconnect-message.engine';
 
 @Module({
   imports: [SessionsModule, WebhookModule],
@@ -15,6 +16,7 @@ import { WebhookModule } from '../webhook/webhook.module';
     PrismaService,
     BaileysMessageEngine,
     WWebJSMessageEngine,
+    WppConnectMessageEngine,
   ],
 })
 export class MessagesModule {}
