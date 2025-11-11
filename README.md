@@ -239,6 +239,14 @@ npm run start:prod
 
 Lihat dokumentasi API (jika tersedia di repo) atau sumber kode modul `modules/messages` dan `modules/sessions` untuk detail endpoint dan payload.
 
+## 📚 Dokumentasi Postman
+
+Dokumentasi Postman collection di folder `docs` untuk memudahkan pengujian endpoint API.
+
+File yang disertakan:
+
+- [docs/wabot-api.postman_collection.json — Postman collection](./docs/wabot-api.postman_collection.json)
+
 ---
 
 ## 🔐 Lisensi & Atribusi

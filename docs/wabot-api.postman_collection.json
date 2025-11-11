@@ -1,0 +1,937 @@
+{
+	"info": {
+		"_postman_id": "14dd122e-4fae-411f-9c23-5cf6e2b203a8",
+		"name": "Wabot API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20500330",
+		"_collection_link": "https://www.postman.com/sejator-dev/workspace/api-public/collection/20500330-14dd122e-4fae-411f-9c23-5cf6e2b203a8?action=share&source=collection_link&creator=20500330"
+	},
+	"item": [
+		{
+			"name": "session",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"XXX\", // harus unique tanpa spasi\r\n    \"engine\": \"baileys\",\r\n    \"attributes\": {\r\n        // opsional\r\n        \"message_delay\": 15, // untuk jeda pengiriman pesan, dalam detik\r\n        \"webhook_incoming\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk pesan masuk\r\n        \"webhook_status\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk status pesan yang di kirim\r\n        \"webhook_secret\": \"xxx\" // untuk membuat HMAC SHA256 signature\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/sessions",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"sessions"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"XXX\", // harus unique tanpa spasi\r\n    \"engine\": \"baileys\",\r\n    \"attributes\": {\r\n        // opsional\r\n        \"message_delay\": 15, // untuk jeda pengiriman pesan, dalam detik\r\n        \"webhook_incoming\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk pesan masuk\r\n        \"webhook_status\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk status pesan yang di kirim\r\n        \"webhook_secret\": \"xxx\" // untuk membuat HMAC SHA256 signature\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/sessions",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"sessions"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "423"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1a7-b61WRITdG4zQ2n77VBFjmuVr998\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 11 Nov 2025 08:33:32 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 201,\n    \"data\": {\n        \"id\": \"41fd06bb-e8f0-439c-85f5-916d492e1b86\",\n        \"name\": \"XXX\",\n        \"engine\": \"baileys\",\n        \"attributes\": {\n            \"message_delay\": 15,\n            \"webhook_secret\": \"xxx\",\n            \"webhook_status\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\",\n            \"webhook_incoming\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\"\n        },\n        \"connected\": false,\n        \"created_at\": \"2025-11-11T08:33:32.077Z\",\n        \"updated_at\": \"2025-11-11T08:33:32.077Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"XXX\", // harus unique tanpa spasi\r\n    \"engine\": \"baileys\",\r\n    \"attributes\": {\r\n        // opsional\r\n        \"message_delay\": 15, // untuk jeda pengiriman pesan, dalam detik\r\n        \"webhook_incoming\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk pesan masuk\r\n        \"webhook_status\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk status pesan yang di kirim\r\n        \"webhook_secret\": \"xxx\" // untuk membuat HMAC SHA256 signature\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/sessions/{{id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"sessions",
+								"{{id}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"XXX\", // harus unique tanpa spasi\r\n    \"engine\": \"baileys\",\r\n    \"attributes\": {\r\n        // opsional\r\n        \"message_delay\": 15, // untuk jeda pengiriman pesan, dalam detik\r\n        \"webhook_incoming\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk pesan masuk\r\n        \"webhook_status\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\", // untuk status pesan yang di kirim\r\n        \"webhook_secret\": \"xxx\" // untuk membuat HMAC SHA256 signature\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/sessions/{{id}}",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"sessions",
+										"{{id}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "423"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1a7-D77mPIA0hKLLocoTd7ixUth+Xqs\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 11 Nov 2025 08:33:58 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 200,\n    \"data\": {\n        \"id\": \"41fd06bb-e8f0-439c-85f5-916d492e1b86\",\n        \"name\": \"XXX\",\n        \"engine\": \"baileys\",\n        \"attributes\": {\n            \"message_delay\": 15,\n            \"webhook_secret\": \"xxx\",\n            \"webhook_status\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\",\n            \"webhook_incoming\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\"\n        },\n        \"connected\": false,\n        \"created_at\": \"2025-11-11T08:33:32.077Z\",\n        \"updated_at\": \"2025-11-11T08:33:58.754Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "connect",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/sessions/{{id}}/connect",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"sessions",
+								"{{id}}",
+								"connect"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/sessions/{{id}}/connect",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"sessions",
+										"{{id}}",
+										"connect"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "6613"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"19d5-gFp51OejRC10ATbj58Lvxq0pMgU\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 11 Nov 2025 08:34:34 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 200,\n    \"data\": {\n        \"session_id\": \"41fd06bb-e8f0-439c-85f5-916d492e1b86\",\n        \"name\": \"XXX\",\n        \"engine\": \"baileys\",\n        \"status\": \"qr_generated\",\n        \"qrCodeUrl\": \"data:image/png;base64,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\",\n        \"timeout\": 117,\n        \"timestamp\": \"2025-11-11 15:34:34\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "reconnect",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/sessions/{{id}}/reconnect",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"sessions",
+								"{{id}}",
+								"reconnect"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/sessions/{{id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"sessions",
+								"{{id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "destroy memory",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/sessions/{{id}}/force",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"sessions",
+								"{{id}}",
+								"force"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/sessions?name=XXX",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"sessions"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "XXX"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/sessions?name=XXX",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"sessions"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "XXX"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "423"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1a7-AiQYdUoB86ZQA89QIs4v/Pm44OM\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 11 Nov 2025 08:37:36 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 200,\n    \"data\": {\n        \"id\": \"41fd06bb-e8f0-439c-85f5-916d492e1b86\",\n        \"name\": \"XXX\",\n        \"engine\": \"baileys\",\n        \"attributes\": {\n            \"message_delay\": 15,\n            \"webhook_secret\": \"xxx\",\n            \"webhook_status\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\",\n            \"webhook_incoming\": \"https://webhook.site/b7284a17-a660-48b1-aad2-75339d64971c\"\n        },\n        \"connected\": false,\n        \"created_at\": \"2025-11-11T08:33:32.077Z\",\n        \"updated_at\": \"2025-11-11T08:36:24.948Z\"\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "message",
+			"item": [
+				{
+					"name": "text",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/send/message",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"send",
+								"message"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "multiple",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"data\": [\r\n        {\r\n            \"session_id\": \"{{id}}\",\r\n            \"phone\": \"{{phone}}\",\r\n            \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n        },\r\n        {\r\n            \"session_id\": \"{{id}}\",\r\n            \"phone\": \"{{phone2}}\",\r\n            \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n        },\r\n        {\r\n            \"session_id\": \"{{id}}\",\r\n            \"phone\": \"{{phone3}}\",\r\n            \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/send/message-multiple",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"send",
+								"message-multiple"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"data\": [\r\n        {\r\n            \"session_id\": \"{{id}}\",\r\n            \"phone\": \"{{phone}}\",\r\n            \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n        },\r\n        {\r\n            \"session_id\": \"{{id}}\",\r\n            \"phone\": \"{{phone2}}\",\r\n            \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n        },\r\n        {\r\n            \"session_id\": \"{{id}}\",\r\n            \"phone\": \"{{phone3}}\",\r\n            \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/send/message-multiple",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"send",
+										"message-multiple"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "758"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2f6-1pElA00mBMKqWI3Brn+3Hcg7pH0\""
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 22 Oct 2025 23:14:05 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 201,\n    \"data\": [\n        {\n            \"id\": \"db0ea5c1-bddb-40b9-804d-ae5f1b749665\",\n            \"session_id\": \"f223006b-66fb-41b5-9d3b-1107d3f76203\",\n            \"to\": \"628129xxx\",\n            \"direction\": \"outgoing\",\n            \"status\": \"pending\",\n            \"created_at\": \"2025-10-22T23:14:05.950Z\",\n            \"updated_at\": \"2025-10-22T23:14:05.950Z\"\n        },\n        {\n            \"id\": \"b1c2093c-49a3-49bc-959a-05e8dd970b1f\",\n            \"session_id\": \"f223006b-66fb-41b5-9d3b-1107d3f76203\",\n            \"to\": \"628574xxx\",\n            \"direction\": \"outgoing\",\n            \"status\": \"pending\",\n            \"created_at\": \"2025-10-22T23:14:05.966Z\",\n            \"updated_at\": \"2025-10-22T23:14:05.966Z\"\n        },\n        {\n            \"id\": \"e68826d2-2758-4194-baee-d8c44dcd1878\",\n            \"session_id\": \"f223006b-66fb-41b5-9d3b-1107d3f76203\",\n            \"to\": \"62852xxxx\",\n            \"direction\": \"outgoing\",\n            \"status\": \"pending\",\n            \"created_at\": \"2025-10-22T23:14:05.972Z\",\n            \"updated_at\": \"2025-10-22T23:14:05.972Z\"\n        }\n    ]\n}"
+						},
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"message\": \"Test whatsapp abaikan\\n\\n _Miring_\\n*Tebal*\\n~Coret~\\n```Monospace```\\n\\nList Item\\n- Item 1\\n- Item 2\\n- Item 3\\n- Item 4\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/send/message",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"send",
+										"message"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "275"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"113-gSFCTXZw/FdmHA1W47YRu4uCFtM\""
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 22 Oct 2025 23:12:38 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 201,\n    \"data\": {\n        \"id\": \"03529959-0fa6-4ff6-bcb1-0b9f77329f36\",\n        \"session_id\": \"f223006b-66fb-41b5-9d3b-1107d3f76203\",\n        \"to\": \"62812xxxxx\",\n        \"direction\": \"outgoing\",\n        \"status\": \"pending\",\n        \"created_at\": \"2025-10-22T23:12:38.348Z\",\n        \"updated_at\": \"2025-10-22T23:12:38.348Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"image\": \"https://img.freepik.com/free-vector/programming-concept-illustration_114360-1351.jpg\",\r\n    \"caption\": \"caption image\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/send/image",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"send",
+								"image"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"image\": \"https://img.freepik.com/free-vector/programming-concept-illustration_114360-1351.jpg\",\r\n    \"caption\": \"caption image\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/send/image",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"send",
+										"image"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "275"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"113-jztgXothl6Pn+GZBLrlvn328sMI\""
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 22 Oct 2025 23:19:25 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 201,\n    \"data\": {\n        \"id\": \"9cab432f-64b5-423d-b28e-0916eb7211d9\",\n        \"session_id\": \"f223006b-66fb-41b5-9d3b-1107d3f76203\",\n        \"to\": \"628129xxxx\",\n        \"direction\": \"outgoing\",\n        \"status\": \"pending\",\n        \"created_at\": \"2025-10-22T23:19:25.411Z\",\n        \"updated_at\": \"2025-10-22T23:19:25.411Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "video",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    // \"video\": \"https://sample-videos.com/video321/mp4/480/big_buck_bunny_480p_1mb.mp4\", (tes kirim video error)\r\n    \"video\": \"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4\",\r\n    \"caption\": \"caption video\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/send/video",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"send",
+								"video"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    // \"video\": \"https://sample-videos.com/video321/mp4/480/big_buck_bunny_480p_1mb.mp4\", (tes kirim video error)\r\n    \"video\": \"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4\",\r\n    \"caption\": \"caption video\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/send/video",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"send",
+										"video"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "275"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"113-BkU8VxgU+o7ZkZxXim72H3dleo4\""
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 22 Oct 2025 23:21:49 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 201,\n    \"data\": {\n        \"id\": \"584e90e2-305b-4fec-be95-b375d52130fd\",\n        \"session_id\": \"f223006b-66fb-41b5-9d3b-1107d3f76203\",\n        \"to\": \"628129xxxx\",\n        \"direction\": \"outgoing\",\n        \"status\": \"pending\",\n        \"created_at\": \"2025-10-22T23:21:49.967Z\",\n        \"updated_at\": \"2025-10-22T23:21:49.967Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"document\": \"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf\",\r\n    \"filename\": \"Dummy File\",\r\n    \"caption\": \"caption dokumen\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/send/document",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"send",
+								"document"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"session_id\": \"{{id}}\",\r\n    \"phone\": \"{{phone}}\",\r\n    \"document\": \"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf\",\r\n    \"filename\": \"Dummy File\",\r\n    \"caption\": \"caption dokumen\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/send/document",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"send",
+										"document"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "SendNotif"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "275"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"113-ksFjD231vFaIhSAaxlRMZql3bHM\""
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 22 Oct 2025 23:22:10 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"code\": 201,\n    \"data\": {\n        \"id\": \"22e05d42-ee9b-4112-9839-6a965326f29b\",\n        \"session_id\": \"f223006b-66fb-41b5-9d3b-1107d3f76203\",\n        \"to\": \"628129xxxx\",\n        \"direction\": \"outgoing\",\n        \"status\": \"pending\",\n        \"created_at\": \"2025-10-22T23:22:10.349Z\",\n        \"updated_at\": \"2025-10-22T23:22:10.349Z\"\n    }\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "id",
+			"value": "41fd06bb-e8f0-439c-85f5-916d492e1b86"
+		},
+		{
+			"key": "token",
+			"value": "xxx-public-key-xxx"
+		}
+	]
+}
