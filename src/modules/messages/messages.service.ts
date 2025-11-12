@@ -26,13 +26,13 @@ export class MessagesService {
   async sendMessage(dto: CreateMessageDto) {
     const connector = this.connectorRegistry.get(dto.session_id);
     dto.message = removeHtmlEntities(dto.message);
-    if (connector.engine === 'baileys') {
+    if (connector?.engine === 'baileys') {
       const message = await this.baileysMessage.sendText(dto);
       return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wwebjs') {
+    } else if (connector?.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendText(dto);
       return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wppconnect') {
+    } else if (connector?.engine === 'wppconnect') {
       const message = await this.wppconnectMessage.sendText(dto);
       return this.wppconnectMessage.getSanitizedMessage(message);
     }
@@ -45,14 +45,14 @@ export class MessagesService {
 
   async sendImage(dto: CreateImageMessageDto) {
     const connector = this.connectorRegistry.get(dto.session_id);
-    if (connector.engine === 'baileys') {
+    if (connector?.engine === 'baileys') {
       dto.caption = removeHtmlEntities(dto.caption);
       const message = await this.baileysMessage.sendImage(dto);
       return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wwebjs') {
+    } else if (connector?.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendImage(dto);
       return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wppconnect') {
+    } else if (connector?.engine === 'wppconnect') {
       const message = await this.wppconnectMessage.sendImage(dto);
       return this.wppconnectMessage.getSanitizedMessage(message);
     }
@@ -60,14 +60,14 @@ export class MessagesService {
 
   async sendVideo(dto: CreateVideoMessageDto) {
     const connector = this.connectorRegistry.get(dto.session_id);
-    if (connector.engine === 'baileys') {
+    if (connector?.engine === 'baileys') {
       dto.caption = removeHtmlEntities(dto.caption);
       const message = await this.baileysMessage.sendVideo(dto);
       return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wwebjs') {
+    } else if (connector?.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendVideo(dto);
       return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wppconnect') {
+    } else if (connector?.engine === 'wppconnect') {
       const message = await this.wppconnectMessage.sendVideo(dto);
       return this.wppconnectMessage.getSanitizedMessage(message);
     }
@@ -75,14 +75,14 @@ export class MessagesService {
 
   async sendDocument(dto: CreateDocumentMessageDto) {
     const connector = this.connectorRegistry.get(dto.session_id);
-    if (connector.engine === 'baileys') {
+    if (connector?.engine === 'baileys') {
       dto.caption = removeHtmlEntities(dto.caption);
       const message = await this.baileysMessage.sendDocument(dto);
       return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wwebjs') {
+    } else if (connector?.engine === 'wwebjs') {
       const message = await this.wwebjsMessage.sendDocument(dto);
       return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector.engine === 'wppconnect') {
+    } else if (connector?.engine === 'wppconnect') {
       const message = await this.wppconnectMessage.sendDocument(dto);
       return this.wppconnectMessage.getSanitizedMessage(message);
     }

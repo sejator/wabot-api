@@ -187,6 +187,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
   private async handleMessageReceived(sessionId: string, msg: Message) {
     if (!msg.fromMe && msg.body) {
       const connector = this.connectorRegistry.get(sessionId);
+      if (!connector) return;
 
       const payload: MessagePayload = {
         id: msg.id.id,
@@ -296,7 +297,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
         this.webhook
           .statusMessage(
             'message.updated',
-            connector.sessionAttributes,
+            connector?.sessionAttributes,
             payload,
           )
           .catch(() => {});
@@ -598,6 +599,7 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
 
   async stop(sessionId: string) {
     const connector = this.connectorRegistry.get(sessionId);
+    if (!connector) return;
     await connector.wabot.logout();
     await connector.wabot.destroy();
     this.connectorRegistry.unregister(sessionId);

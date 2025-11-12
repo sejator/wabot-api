@@ -82,8 +82,8 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
     );
 
     // Bersihkan listener lama jika ada
-    if (this.connectorRegistry.has(session.id)) {
-      const existingConnector = this.connectorRegistry.get(session.id);
+    const existingConnector = this.connectorRegistry.get(session.id);
+    if (existingConnector) {
       this.logger.warn(`Cleaning up old listeners & socket for ${session.id}`);
 
       try {
@@ -455,7 +455,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             this.webhook
               .statusMessage(
                 'message.updated',
-                connector.sessionAttributes,
+                connector?.sessionAttributes,
                 payload,
               )
               .catch(() => {});

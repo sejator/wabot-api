@@ -198,7 +198,7 @@ export class WppConnectEngine extends AbstractEngine implements IEngine {
       const connector = this.connectorRegistry.get(session.id);
 
       this.webhook
-        .statusMessage('message.updated', connector.sessionAttributes, payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (err) {
       this.logger.error(

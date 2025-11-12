@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Connector } from 'src/common/types/session.type';
 
 @Injectable()
@@ -9,30 +9,19 @@ export class ConnectorRegistry<TConnector extends Connector = Connector> {
    * Simpan connector aktif ke dalam registry
    * @param connector Connector yang akan didaftarkan
    * @returns void
-   * @throws Error jika connector tidak memiliki session.id
    */
   register(connector: TConnector) {
-    if (!connector.sessionId) {
-      throw new Error('Connector must have session.id');
-    }
     this.connectors.set(connector.sessionId, connector);
   }
 
   /**
    * Ambil connector berdasarkan session_id
    * @param session_id ID sesi untuk mengambil connector
-   * @returns Connector yang terdaftar
-   * @throws NotFoundException jika connector tidak ditemukan atau sesi tidak terhubung
+   * @returns Connector yang terdaftar atau null jika tidak ditemukan atau tidak terhubung
    */
-  get(session_id: string): TConnector {
+  get(session_id: string): TConnector | null {
     const connector = this.connectors.get(session_id);
-    if (!connector)
-      throw new NotFoundException(`Session ${session_id} not found`);
-
-    if (!connector.isConnected()) {
-      throw new NotFoundException(`Session ${session_id} is not connected`);
-    }
-
+    if (!connector || !connector.isConnected()) return null;
     return connector;
   }
 

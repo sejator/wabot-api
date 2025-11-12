@@ -103,18 +103,12 @@ export class SessionsService implements OnModuleInit {
         },
       });
 
-      try {
-        // Jika ada konektor aktif, sinkronkan attributes
-        const connector = this.connectorRegistry.get(id);
-        if (connector) {
-          connector.sessionAttributes = updatedSession.attributes as Record<
-            string,
-            any
-          >;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
-        // ignore
+      const connector = this.connectorRegistry.get(id);
+      if (connector) {
+        connector.sessionAttributes = updatedSession.attributes as Record<
+          string,
+          any
+        >;
       }
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -137,7 +131,7 @@ export class SessionsService implements OnModuleInit {
     if (hashConnectorExists) {
       // Jika connector sudah ada di registry, kembalikan langsung
       const connector = this.connectorRegistry.get(session_id);
-      if (!connector.isConnected())
+      if (!connector?.isConnected())
         throw new NotFoundException('Session not connected');
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -158,7 +152,7 @@ export class SessionsService implements OnModuleInit {
 
     const connector = this.connectorRegistry.get(session_id);
 
-    if (connector.isConnected()) {
+    if (connector?.isConnected()) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { auth_state, ...sessionWithoutAuth } = session;
       return sessionWithoutAuth;
@@ -170,11 +164,10 @@ export class SessionsService implements OnModuleInit {
 
   async stop(session_id: string) {
     const connector = this.connectorRegistry.get(session_id);
-    if (!connector.isConnected())
-      throw new BadRequestException('Session is not connected');
-
-    const engine = this.engineRegistry.get(connector.engine);
-    return await engine.stop(session_id);
+    if (connector && connector.isConnected()) {
+      const engine = this.engineRegistry.get(connector.engine);
+      return await engine.stop(session_id);
+    }
   }
 
   private async reconnectOnStartup() {
