@@ -12,15 +12,20 @@ export class AuthMiddleware implements NestMiddleware {
   private readonly logger = new FileLoggerService(AuthMiddleware.name);
 
   use(req: Request, res: Response, next: NextFunction): void {
-    const authHeader = req.headers['authorization'];
+    if (process.env.NODE_ENV === 'development') {
+      this.logger.log(
+        `Bypassing auth validation in development mode for IP: ${req.ip}`,
+      );
+      return next();
+    }
 
+    const authHeader = req.headers['authorization'];
     if (typeof authHeader !== 'string') {
       this.logger.warn(`Missing authorization header from IP: ${req.ip}`);
       throw new UnauthorizedException('Access denied');
     }
 
     const [type, token] = authHeader.split(' ');
-
     if (type !== 'Bearer' || !token) {
       this.logger.warn(`Invalid auth format from IP: ${req.ip}`);
       throw new UnauthorizedException('Access denied');
@@ -33,7 +38,6 @@ export class AuthMiddleware implements NestMiddleware {
       throw new UnauthorizedException('Access denied');
     }
 
-    // --- Validasi IP ---
     const allowedIps = (process.env.SERVER_IP_ADMIN || '127.0.0.1,localhost')
       .split(',')
       .map((ip) => ip.trim());
