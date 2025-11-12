@@ -280,6 +280,7 @@ export class WppConnectEngine extends AbstractEngine implements IEngine {
           headless: true,
           useChrome: true,
           debug: process.env.NODE_ENV !== 'production',
+          logQR: process.env.NODE_ENV !== 'production',
           folderNameToken: `${folderNameToken}/wppconnect`,
           autoClose: this.qrTimeout,
           statusFind: (statusSession: WppStatusFind) => {
@@ -291,22 +292,18 @@ export class WppConnectEngine extends AbstractEngine implements IEngine {
           },
           browserArgs: [
             '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-zygote',
-            '--single-process',
             '--disable-extensions',
             '--disable-infobars',
+            '--disable-features=site-per-process',
+            '--start-maximized',
           ],
           puppeteerOptions: {
             args: [
               '--no-sandbox',
-              '--disable-setuid-sandbox',
-              '--disable-dev-shm-usage',
-              '--disable-gpu',
-              '--no-zygote',
-              '--single-process',
+              '--disable-extensions',
+              '--disable-infobars',
+              '--disable-features=site-per-process',
+              '--start-maximized',
             ],
           },
         };
