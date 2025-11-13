@@ -19,7 +19,6 @@ import {
   BaileysConnector,
   SessionAttributes,
 } from 'src/common/types/session.type';
-import { useBaileysAuthState } from 'src/common/utils/baileys-auth';
 import {
   delay,
   formatDateTime,
@@ -37,6 +36,9 @@ import {
   SessionPayload,
 } from 'src/common/types/wabot-event.types';
 import { wabot } from 'src/common/events/wabot.events';
+import type { Db } from 'mongodb';
+import { useBaileysAuthStateMongo } from 'src/common/utils/baileys-auth-mongo';
+import { DATABASE_CONNECTION } from 'src/mongo/mongo.module';
 
 const transportLog =
   process.env.NODE_ENV === 'production'
@@ -70,13 +72,17 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
     private readonly connectorRegistry: ConnectorRegistry<BaileysConnector>,
     readonly webhook: WebhookService,
     @Inject(REDLOCK) @Optional() readonly redlock?: Redlock,
+    @Inject(DATABASE_CONNECTION) @Optional() readonly mongoDb?: Db,
   ) {
     super(prisma, 'BaileysEngine');
   }
 
   async connect(session: Session): Promise<SessionPayload> {
-    const { state, saveCreds } = await useBaileysAuthState(
-      this.prisma,
+    if (!this.mongoDb) {
+      throw new Error('mongoDb is required for Baileys auth state');
+    }
+    const { state, saveCreds } = await useBaileysAuthStateMongo(
+      this.mongoDb,
       session.id,
       this.redlock,
     );
@@ -295,6 +301,20 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
             await this.prisma.authKey.deleteMany({
               where: { session_id: session.id },
             });
+
+            // destroy auth mongo document
+            if (this.mongoDb) {
+              await this.mongoDb
+                .collection('sessions')
+                .updateOne(
+                  { session_id: session.id },
+                  { $set: { auth_state: {} } },
+                );
+
+              await this.mongoDb
+                .collection('auth_keys')
+                .deleteMany({ session_id: session.id });
+            }
 
             this.connectorRegistry.unregister(session.id);
             this.logger.warn(`Session logged out: ${session.id}`);
@@ -559,8 +579,8 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
     if (!connector) return;
 
     try {
-      await destroyAllListeners(connector.wabot);
       await connector.wabot.logout();
+      await destroyAllListeners(connector.wabot);
     } catch (err) {
       this.logger.error(`Error stopping session ${sessionId}: ${err}`);
     }
@@ -573,6 +593,20 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
     });
 
     if (!session) return;
+
+    // destroy auth mongo document
+    if (this.mongoDb) {
+      await this.mongoDb
+        .collection('sessions')
+        .updateOne(
+          { $or: [{ id: session.id }, { id: session.id }] },
+          { $set: { auth_state: {} } },
+        );
+
+      await this.mongoDb
+        .collection('auth_keys')
+        .deleteMany({ session_id: session.id });
+    }
 
     // event session.disconnected
     const payload = {

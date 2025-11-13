@@ -6,9 +6,10 @@ import { BaileysEngine } from './baileys.engine';
 import { WWebJSEngine } from './wwebjs.engine';
 import { WebhookModule } from 'src/modules/webhook/webhook.module';
 import { WppConnectEngine } from './wppconnect.engine';
+import { MongoModule } from 'src/mongo/mongo.module';
 
 @Module({
-  imports: [PrismaModule, WebhookModule],
+  imports: [PrismaModule, WebhookModule, MongoModule],
   providers: [
     EngineManager,
     ConnectorRegistry,
