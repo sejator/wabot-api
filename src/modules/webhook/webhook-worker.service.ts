@@ -22,7 +22,7 @@ export class WebhookWorkerService implements OnModuleInit {
   private async startWorker(): Promise<void> {
     const processQueue = async (): Promise<void> => {
       try {
-        // Ambil dan proses beberapa item per batch (misal 5)
+        // proses 5 item per batch
         for (let i = 0; i < 5; i++) {
           const item = await this.queue.dequeue();
           if (!item) break;
@@ -31,10 +31,7 @@ export class WebhookWorkerService implements OnModuleInit {
       } catch (err) {
         this.logger.error(`Worker error: ${(err as Error).message}`);
       } finally {
-        // Jadwalkan lagi setelah 1 detik
-        setTimeout(() => {
-          void processQueue();
-        }, 1000);
+        setTimeout(() => void processQueue(), 1000);
       }
     };
 
@@ -42,9 +39,9 @@ export class WebhookWorkerService implements OnModuleInit {
   }
 
   private async processWebhook(item: WebhookQueueItem): Promise<void> {
-    if (!item) return;
-
     const { url, secret, event, payload, isAdmin } = item;
+    const retryCount = item.retryCount ?? 0;
+
     const signature = crypto
       .createHmac('sha256', secret)
       .update(JSON.stringify({ data: payload }))
@@ -71,11 +68,39 @@ export class WebhookWorkerService implements OnModuleInit {
       );
     } catch (error) {
       const err = error as AxiosError;
+
       this.logger.error(
-        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} -> ${url} gagal untuk session ${payload.session_id}: ${
-          err.response?.status || err.message
-        }`,
+        `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} -> ${url} GAGAL | session ${
+          payload.session_id
+        } | percobaan ke-${retryCount} | error: ${err.response?.status || err.message}`,
       );
+
+      // maksimal 3 percobaan
+      if (retryCount >= 3) {
+        this.logger.error(
+          `[${isAdmin ? 'ADMIN' : 'DEVICE'}] Webhook ${event} -> ${url} gagal setelah 3x percobaan`,
+        );
+        return;
+      }
+
+      await this.requeueWithDelay(item);
     }
+  }
+
+  private async requeueWithDelay(item: WebhookQueueItem) {
+    const retry = (item.retryCount ?? 0) + 1;
+
+    const delay = Math.pow(2, retry) * 1000; // exponential backoff: 2s, 4s, 8s
+
+    this.logger.warn(
+      `Retry webhook ${item.event} -> ${item.url} dalam ${delay / 1000}s (percobaan ${retry})`,
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    await this.queue.enqueue({
+      ...item,
+      retryCount: retry,
+    });
   }
 }

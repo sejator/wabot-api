@@ -162,7 +162,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -192,7 +192,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -281,7 +281,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -311,7 +311,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -406,7 +406,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -436,7 +436,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -532,7 +532,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -562,7 +562,7 @@ export class WWebJSMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }

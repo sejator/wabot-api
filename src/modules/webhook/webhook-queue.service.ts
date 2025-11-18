@@ -15,6 +15,7 @@ export interface WebhookQueueItem {
   payload: SessionPayload | MessagePayload;
   isAdmin: boolean;
   createdAt: number;
+  retryCount?: number;
 }
 
 @Injectable()
@@ -24,7 +25,12 @@ export class WebhookQueueService {
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
 
   async enqueue(data: WebhookQueueItem): Promise<void> {
-    await this.redis.lpush(this.QUEUE_KEY, JSON.stringify(data));
+    const payload: WebhookQueueItem = {
+      ...data,
+      retryCount: data.retryCount ?? 0,
+    };
+
+    await this.redis.lpush(this.QUEUE_KEY, JSON.stringify(payload));
   }
 
   async dequeue(): Promise<WebhookQueueItem | null> {

@@ -155,7 +155,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -185,7 +185,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -264,7 +264,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
         id: message.id,
         session_id: connector.sessionId,
         name: connector.sessionName,
-        engine: connector.engine || 'baileys',
+        engine: connector.engine || 'wppconnect',
         status: 'sent',
         to: message.to,
         content_type: 'image',
@@ -275,7 +275,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -294,7 +294,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
         id: message.id,
         session_id: session.id,
         name: session.name,
-        engine: session.engine || 'baileys',
+        engine: session.engine || 'wppconnect',
         status: 'failed',
         to: message.to,
         content_type: 'image',
@@ -305,7 +305,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -386,7 +386,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
         id: message.id,
         session_id: connector.sessionId,
         name: connector.sessionName,
-        engine: connector.engine || 'baileys',
+        engine: connector.engine || 'wppconnect',
         status: 'sent',
         to: message.to,
         content_type: 'video',
@@ -397,7 +397,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -416,7 +416,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
         id: message.id,
         session_id: session.id,
         name: session.name,
-        engine: session.engine || 'baileys',
+        engine: session.engine || 'wppconnect',
         status: 'failed',
         to: message.to,
         content_type: 'video',
@@ -427,7 +427,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -517,7 +517,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
         id: message.id,
         session_id: connector.sessionId,
         name: connector.sessionName,
-        engine: connector.engine || 'baileys',
+        engine: connector.engine || 'wppconnect',
         status: 'sent',
         to: message.to,
         content_type: 'document',
@@ -528,7 +528,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -547,7 +547,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
         id: message.id,
         session_id: session.id,
         name: session.name,
-        engine: session.engine || 'baileys',
+        engine: session.engine || 'wppconnect',
         status: 'failed',
         to: message.to,
         content_type: 'document',
@@ -558,7 +558,7 @@ export class WppConnectMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }

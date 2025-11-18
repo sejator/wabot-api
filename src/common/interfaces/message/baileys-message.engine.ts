@@ -160,7 +160,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -190,7 +190,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -282,7 +282,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -312,7 +312,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -405,7 +405,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -435,7 +435,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
@@ -544,7 +544,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     } catch (error) {
       const errorMsg = stringifyError(error);
@@ -574,7 +574,7 @@ export class BaileysMessageEngine extends AbstractMessageEngine {
       };
 
       this.webhook
-        .webhookServerAdmin('message.updated', payload)
+        .statusMessage('message.updated', connector?.sessionAttributes, payload)
         .catch(() => {});
     }
   }
