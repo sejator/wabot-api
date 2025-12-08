@@ -8,6 +8,7 @@ import { RedisModule } from './modules/redis/redis.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { LogCleanupService } from './common/logger/log-cleanup.service';
 import { AuthMiddleware } from './auth/auth.middleware';
+import { WsGateway } from './modules/ws/ws.gateway';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { AuthMiddleware } from './auth/auth.middleware';
     RedisModule,
   ],
   controllers: [AppController],
-  providers: [AppService, LogCleanupService],
+  providers: [AppService, LogCleanupService, WsGateway],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
