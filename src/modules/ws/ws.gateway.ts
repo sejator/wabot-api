@@ -13,17 +13,17 @@ import {
   MessagePayload,
   SessionPayload,
 } from 'src/common/types/wabot-event.types';
-import { SessionsService } from './sessions.service';
-import { CreateSessionDto } from './dto/create-session.dto';
 import { Request } from 'express';
 import { EngineType } from 'src/common/types/session.type';
+import { SessionsService } from '../sessions/sessions.service';
+import { CreateSessionDto } from '../sessions/dto/create-session.dto';
+import { formatDateTime } from 'src/common/utils/general.util';
 
 @WebSocketGateway({
+  path: '/ws',
   cors: { origin: '*' },
 })
-export class SessionsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -32,8 +32,7 @@ export class SessionsGateway
     { socket: WebSocket; sessions: Set<string>; isAlive: boolean }
   >();
 
-  private readonly logger = new FileLoggerService(SessionsGateway.name);
-
+  private readonly logger = new FileLoggerService(WsGateway.name);
   private readonly HEARTBEAT_INTERVAL = 30000; // 30 detik
 
   constructor(private readonly sessions: SessionsService) {
@@ -41,12 +40,29 @@ export class SessionsGateway
     this.startHeartbeat();
   }
 
-  handleConnection(client: WebSocket, req: Request) {
+  async handleConnection(client: WebSocket, req: Request) {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    const clientId = url.searchParams.get('id') || this.generateClientId();
+    const clientId =
+      url.searchParams.get('clientId') || this.generateClientId();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    (client as any).id = clientId;
+    let device: {
+      name: string;
+      id: string;
+      engine: string | null;
+      connected: boolean;
+      created_at: Date;
+      updated_at: Date;
+    };
+
+    try {
+      // verify clientId exists
+      device = await this.sessions.find(clientId);
+    } catch {
+      client.close(1008, 'Unauthorized');
+      return;
+    }
+
+    client.id = clientId;
 
     this.clients.set(clientId, {
       socket: client,
@@ -56,25 +72,36 @@ export class SessionsGateway
 
     this.logger.log(`Client connected: ${clientId}`);
 
-    // untuk heartbeat dari client
     client.on('pong', () => {
       const clientData = this.clients.get(clientId);
       if (clientData) clientData.isAlive = true;
     });
 
     client.on('message', (raw: string) => {
-      // abaikan pesan ping/pong (heartbeat, sudah di handle websocket)
       if (raw === 'ping' || raw === 'pong') return;
 
       try {
         const parsed = JSON.parse(raw) as {
-          event: string;
+          event: WebhookEvent;
           data: Record<string, any>;
         };
-        const { event, data } = parsed;
 
-        if (event === 'session.create') {
-          void this.handleCreateSession(client, data);
+        if (parsed.event === 'session.created') {
+          void this.handleCreateSession(client, parsed.data);
+        }
+
+        if (parsed.event === 'session.connected') {
+          if (device && device.connected) {
+            const payload: SessionPayload = {
+              session_id: device.id,
+              name: device.name,
+              engine: device.engine || 'baileys',
+              status: 'connected',
+              timestamp: formatDateTime(new Date()),
+            };
+
+            this.sendToClient(client, 'session.connected', payload);
+          }
         }
       } catch (err) {
         this.logger.error(`Invalid message from ${clientId}: ${err}`);
@@ -83,103 +110,90 @@ export class SessionsGateway
   }
 
   handleDisconnect(client: WebSocket) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const clientId = (client as any).id;
+    const clientId = client.id;
     if (clientId) {
-      this.clients.delete(clientId as string);
+      this.clients.delete(clientId);
       this.logger.log(`Client disconnected: ${clientId}`);
     }
   }
 
-  /**
-   * Handle session creation
-   */
   private async handleCreateSession(
     client: WebSocket,
     data: CreateSessionDto | Record<string, any>,
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const clientId = (client as any).id;
+    const clientId = client.id;
     const { name, engine } = data as CreateSessionDto;
 
     if (!name) {
-      this.sendToClient(client, 'session.error', {
+      return this.sendToClient(client, 'session.error', {
         message: 'Missing session name',
       });
-      return;
     }
+
     const listEngine: EngineType[] = ['baileys', 'wwebjs'];
     if (engine && !listEngine.includes(engine)) {
-      this.sendToClient(client, 'session.error', {
+      return this.sendToClient(client, 'session.error', {
         message: 'Invalid engine type',
       });
-      return;
     }
 
-    if (engine) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const clientData = this.clients.get(clientId);
-      if (!clientData) return;
+    const clientData = this.clients.get(clientId);
+    if (!clientData) return;
 
-      let session: {
-        id: string;
-        name: string;
-        engine: string | null;
-        connected: boolean;
-        created_at: Date;
-        updated_at: Date;
-      };
+    let session: {
+      id: string;
+      name: string;
+      engine: string | null;
+      connected: boolean;
+      created_at: Date;
+      updated_at: Date;
+    };
+    try {
+      session = await this.sessions.find(name);
+    } catch {
+      session = await this.sessions.create({ name, engine });
+    }
 
-      try {
-        session = await this.sessions.find(name);
-      } catch {
-        session = await this.sessions.create({
-          name: name,
-          engine: engine,
-        });
-      }
+    clientData.sessions.add(session.name);
 
-      clientData.sessions.add(session.name);
+    this.broadcastToSession(session.name, 'session.created', {
+      session_id: session.id,
+      name: session.name,
+      engine: session.engine || 'unknown',
+      status: 'created',
+      timestamp: new Date(),
+    });
 
-      this.broadcastToSession(session.name, 'session.created', {
-        session_id: session.id,
-        name: session.name,
-        engine: session.engine || 'unknown',
-        status: 'created',
-        timestamp: new Date(),
-      } as SessionPayload);
+    // CONNECT ENGINE
+    try {
+      const connect = await this.sessions.connect(session.id);
 
-      try {
-        const connect = await this.sessions.connect(session.id);
-        if ('connected' in connect && connect.connected) {
-          this.broadcastToSession(session.name, 'session.connected', {
-            session_id: session.id,
-            name: session.name,
-            engine: session.engine || 'unknown',
-            status: 'connected',
-            timestamp: new Date(),
-          } as SessionPayload);
-        }
-      } catch (error) {
-        this.logger.error(`Failed to connect session ${session.id}: ${error}`);
-        this.broadcastToSession(session.name, 'session.error', {
-          session_id: Math.random().toString(36).substring(2, 15),
-          name: name,
-          engine: engine,
-          status: 'error',
+      if (connect?.connected) {
+        this.broadcastToSession(session.name, 'session.connected', {
+          session_id: session.id,
+          name: session.name,
+          engine: session.engine || 'unknown',
+          status: 'connected',
           timestamp: new Date(),
-          message: 'Failed to connect session',
         });
       }
+    } catch (error) {
+      this.logger.error(`Failed to connect session ${session.id}: ${error}`);
+
+      this.broadcastToSession(session.name, 'session.error', {
+        session_id: session.id,
+        name,
+        engine,
+        status: 'error',
+        timestamp: new Date(),
+        message: 'Failed to connect session',
+      });
     }
   }
 
-  /**
-   * Kirim data ke client
-   */
   private sendToClient(
     client: WebSocket,
-    event: string,
+    event: WebhookEvent,
     data: Record<string, any>,
   ) {
     try {
@@ -189,25 +203,18 @@ export class SessionsGateway
     }
   }
 
-  /**
-   * Broadcast ke semua client yang join session tertentu
-   */
   private broadcastToSession(
     sessionName: string,
-    event: string,
+    event: WebhookEvent,
     payload: Record<string, any>,
   ) {
-    for (const [clientId, { socket, sessions }] of this.clients.entries()) {
-      console.log('Checking client sessions:', clientId, Array.from(sessions));
+    for (const [, { socket, sessions }] of this.clients.entries()) {
       if (sessions.has(sessionName)) {
         this.sendToClient(socket, event, payload);
       }
     }
   }
 
-  /**
-   * Broadcast global event (webhook)
-   */
   private registerGlobalListeners() {
     WABOT_EVENTS.forEach((event) => {
       wabot.on(event, (payload: WebhookPayload) => {
@@ -230,9 +237,6 @@ export class SessionsGateway
     }
   }
 
-  /**
-   * Jalankan heartbeat bawaan WebSocket
-   */
   private startHeartbeat() {
     setInterval(() => {
       for (const [clientId, clientData] of this.clients.entries()) {
@@ -244,6 +248,7 @@ export class SessionsGateway
         }
 
         clientData.isAlive = false;
+
         try {
           clientData.socket.ping();
         } catch (err) {

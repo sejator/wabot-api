@@ -35,6 +35,7 @@ export interface SessionPayload {
   session_id: string;
   name: string;
   engine: string;
+  connected?: boolean;
   status:
     | 'created'
     | 'connected'
