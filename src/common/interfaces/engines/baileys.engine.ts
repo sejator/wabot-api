@@ -361,7 +361,10 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
                 payload,
               );
 
-              if (response === undefined) return;
+              if (response === undefined) {
+                await sock.sendPresenceUpdate('unavailable');
+                return;
+              }
 
               // Kirim balasan otomatis
               const jid = msg.key.remoteJid!;
