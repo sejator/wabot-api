@@ -12,6 +12,9 @@ import { Connector } from 'src/common/types/session.type';
 import { ConnectorRegistry } from 'src/common/interfaces/engines/connector-registry.service';
 import { WWebJSMessageEngine } from 'src/common/interfaces/message/wwebjs-message.engine';
 import { WppConnectMessageEngine } from 'src/common/interfaces/message/wppconnect-message.engine';
+import { DisconnectReason } from 'baileys';
+import { Boom } from '@hapi/boom';
+import { SessionsService } from 'src/modules/sessions/sessions.service';
 
 @Injectable()
 export class MessagesService {
@@ -20,21 +23,103 @@ export class MessagesService {
     private readonly baileysMessage: BaileysMessageEngine,
     private readonly wwebjsMessage: WWebJSMessageEngine,
     private readonly wppconnectMessage: WppConnectMessageEngine,
+    private readonly sessions: SessionsService,
   ) {}
 
   /** Kirim pesan teks */
   async sendMessage(dto: CreateMessageDto) {
-    const connector = this.connectorRegistry.get(dto.session_id);
-    dto.message = removeHtmlEntities(dto.message);
-    if (connector?.engine === 'baileys') {
-      const message = await this.baileysMessage.sendText(dto);
-      return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wwebjs') {
-      const message = await this.wwebjsMessage.sendText(dto);
-      return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wppconnect') {
-      const message = await this.wppconnectMessage.sendText(dto);
-      return this.wppconnectMessage.getSanitizedMessage(message);
+    try {
+      const connector = this.getConnectorOrThrow(dto.session_id);
+      dto.message = removeHtmlEntities(dto.message);
+
+      return this.executeWithEngine(connector, dto, {
+        baileys: async (d) => {
+          const msg = await this.baileysMessage.sendText(d);
+          return this.baileysMessage.getSanitizedMessage(msg);
+        },
+        wwebjs: async (d) => {
+          const msg = await this.wwebjsMessage.sendText(d);
+          return this.wwebjsMessage.getSanitizedMessage(msg);
+        },
+        wppconnect: async (d) => {
+          const msg = await this.wppconnectMessage.sendText(d);
+          return this.wppconnectMessage.getSanitizedMessage(msg);
+        },
+      });
+    } catch (error: unknown) {
+      return this.handleError(error, dto.session_id, 'message');
+    }
+  }
+
+  async sendImage(dto: CreateImageMessageDto) {
+    try {
+      const connector = this.getConnectorOrThrow(dto.session_id);
+      dto.caption = removeHtmlEntities(dto.caption);
+
+      return this.executeWithEngine(connector, dto, {
+        baileys: async (d) => {
+          const msg = await this.baileysMessage.sendImage(d);
+          return this.baileysMessage.getSanitizedMessage(msg);
+        },
+        wwebjs: async (d) => {
+          const msg = await this.wwebjsMessage.sendImage(d);
+          return this.wwebjsMessage.getSanitizedMessage(msg);
+        },
+        wppconnect: async (d) => {
+          const msg = await this.wppconnectMessage.sendImage(d);
+          return this.wppconnectMessage.getSanitizedMessage(msg);
+        },
+      });
+    } catch (error: unknown) {
+      return this.handleError(error, dto.session_id, 'image');
+    }
+  }
+
+  async sendVideo(dto: CreateVideoMessageDto) {
+    try {
+      const connector = this.getConnectorOrThrow(dto.session_id);
+      dto.caption = removeHtmlEntities(dto.caption);
+
+      return this.executeWithEngine(connector, dto, {
+        baileys: async (d) => {
+          const msg = await this.baileysMessage.sendVideo(d);
+          return this.baileysMessage.getSanitizedMessage(msg);
+        },
+        wwebjs: async (d) => {
+          const msg = await this.wwebjsMessage.sendVideo(d);
+          return this.wwebjsMessage.getSanitizedMessage(msg);
+        },
+        wppconnect: async (d) => {
+          const msg = await this.wppconnectMessage.sendVideo(d);
+          return this.wppconnectMessage.getSanitizedMessage(msg);
+        },
+      });
+    } catch (error: unknown) {
+      return this.handleError(error, dto.session_id, 'video');
+    }
+  }
+
+  async sendDocument(dto: CreateDocumentMessageDto) {
+    try {
+      const connector = this.getConnectorOrThrow(dto.session_id);
+      dto.caption = removeHtmlEntities(dto.caption);
+
+      return this.executeWithEngine(connector, dto, {
+        baileys: async (d) => {
+          const msg = await this.baileysMessage.sendDocument(d);
+          return this.baileysMessage.getSanitizedMessage(msg);
+        },
+        wwebjs: async (d) => {
+          const msg = await this.wwebjsMessage.sendDocument(d);
+          return this.wwebjsMessage.getSanitizedMessage(msg);
+        },
+        wppconnect: async (d) => {
+          const msg = await this.wppconnectMessage.sendDocument(d);
+          return this.wppconnectMessage.getSanitizedMessage(msg);
+        },
+      });
+    } catch (error: unknown) {
+      return this.handleError(error, dto.session_id, 'document');
     }
   }
 
@@ -43,48 +128,60 @@ export class MessagesService {
     return Promise.all(dto.data.map((d) => this.sendMessage(d)));
   }
 
-  async sendImage(dto: CreateImageMessageDto) {
-    const connector = this.connectorRegistry.get(dto.session_id);
-    if (connector?.engine === 'baileys') {
-      dto.caption = removeHtmlEntities(dto.caption);
-      const message = await this.baileysMessage.sendImage(dto);
-      return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wwebjs') {
-      const message = await this.wwebjsMessage.sendImage(dto);
-      return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wppconnect') {
-      const message = await this.wppconnectMessage.sendImage(dto);
-      return this.wppconnectMessage.getSanitizedMessage(message);
+  private async executeWithEngine<TDto, TResult>(
+    connector: Connector,
+    dto: TDto,
+    executor: {
+      baileys: (dto: TDto) => Promise<TResult>;
+      wwebjs: (dto: TDto) => Promise<TResult>;
+      wppconnect: (dto: TDto) => Promise<TResult>;
+    },
+  ): Promise<TResult> {
+    switch (connector.engine) {
+      case 'baileys':
+        return executor.baileys(dto);
+
+      case 'wwebjs':
+        return executor.wwebjs(dto);
+
+      case 'wppconnect':
+        return executor.wppconnect(dto);
+
+      default:
+        throw new Error('Engine tidak dikenali');
     }
   }
 
-  async sendVideo(dto: CreateVideoMessageDto) {
-    const connector = this.connectorRegistry.get(dto.session_id);
-    if (connector?.engine === 'baileys') {
-      dto.caption = removeHtmlEntities(dto.caption);
-      const message = await this.baileysMessage.sendVideo(dto);
-      return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wwebjs') {
-      const message = await this.wwebjsMessage.sendVideo(dto);
-      return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wppconnect') {
-      const message = await this.wppconnectMessage.sendVideo(dto);
-      return this.wppconnectMessage.getSanitizedMessage(message);
+  private async handleError(
+    error: unknown,
+    sessionId: string,
+    type: string,
+  ): Promise<never> {
+    if (this.isLoggedOutError(error)) {
+      await this.sessions.forceDelete(sessionId);
     }
+
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error(`Unknown error occurred while sending ${type}`);
   }
 
-  async sendDocument(dto: CreateDocumentMessageDto) {
-    const connector = this.connectorRegistry.get(dto.session_id);
-    if (connector?.engine === 'baileys') {
-      dto.caption = removeHtmlEntities(dto.caption);
-      const message = await this.baileysMessage.sendDocument(dto);
-      return this.baileysMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wwebjs') {
-      const message = await this.wwebjsMessage.sendDocument(dto);
-      return this.wwebjsMessage.getSanitizedMessage(message);
-    } else if (connector?.engine === 'wppconnect') {
-      const message = await this.wppconnectMessage.sendDocument(dto);
-      return this.wppconnectMessage.getSanitizedMessage(message);
+  private getConnectorOrThrow(sessionId: string): Connector {
+    const connector = this.connectorRegistry.get(sessionId);
+
+    if (!connector) {
+      throw new Error('Session tidak ditemukan');
     }
+
+    return connector;
+  }
+
+  private isLoggedOutError(error: unknown): boolean {
+    return (
+      error instanceof Boom &&
+      error.output.statusCode === Number(DisconnectReason.loggedOut)
+    );
   }
 }
