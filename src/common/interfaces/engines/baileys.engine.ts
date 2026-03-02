@@ -75,6 +75,25 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
   }
 
   async connect(session: Session): Promise<SessionPayload> {
+    if (this.connectorRegistry.isDeleting(session.id)) {
+      this.logger.warn(`Skip connect() session ${session.id} sedang dihapus`);
+
+      const payload: SessionPayload = {
+        session_id: session.id,
+        name: session.name,
+        engine: session.engine || 'baileys',
+        status: 'disconnected',
+        timestamp: formatDateTime(new Date()),
+      };
+
+      wabot.emit('session.disconnected', payload);
+      this.webhook
+        .webhookServerAdmin('session.disconnected', payload)
+        .catch(() => {});
+
+      return payload;
+    }
+
     const { state, saveCreds } = await useBaileysAuthState(
       this.prisma,
       session.id,
@@ -164,6 +183,13 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
       const handleConnectionUpdate = async (
         update: BaileysEventMap['connection.update'],
       ) => {
+        if (this.connectorRegistry.isDeleting(session.id)) {
+          this.logger.warn(
+            `Ignore connection.update session ${session.id} sedang dihapus`,
+          );
+          return;
+        }
+
         const { connection, lastDisconnect, qr } = update;
 
         // Jika ada QR baru yang dihasilkan
@@ -239,6 +265,7 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
 
         // Jika koneksi terbuka -> tandai sebagai connected
         if (connection === 'open') {
+          if (this.connectorRegistry.isDeleting(session.id)) return;
           await this.prisma.session.update({
             where: { id: session.id },
             data: { connected: true },
@@ -266,6 +293,8 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
 
         // Jika koneksi ditutup -> bersihkan dan coba reconnect jika bukan logout
         if (connection === 'close') {
+          if (this.connectorRegistry.isDeleting(session.id)) return;
+
           // Bersihkan semua listener agar tidak leak
           try {
             await destroyAllListeners(sock);
@@ -283,7 +312,15 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
           if (shouldReconnect) {
             // Jadwalkan reconnect
             this.logger.warn(`Reconnecting session ${session.id} after 5s...`);
-            setTimeout(() => void this.connect(session), 5000);
+            setTimeout(() => {
+              if (!this.connectorRegistry.isDeleting(session.id)) {
+                void this.connect(session);
+              } else {
+                this.logger.warn(
+                  `Reconnect dibatalkan session ${session.id} sedang dihapus`,
+                );
+              }
+            }, 5000);
           } else {
             // Kalau logout manual: bersihkan dari DB dan registry
             await this.prisma.session.update({
@@ -514,7 +551,14 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
         isConnected: () => !!sock?.user,
       };
 
-      this.connectorRegistry.register(connector);
+      if (!this.connectorRegistry.isDeleting(session.id)) {
+        this.connectorRegistry.register(connector);
+        this.logger.log(
+          `Session ${session.id} registered in connector registry.`,
+        );
+      } else {
+        this.logger.warn(`Skip register session ${session.id} sedang dihapus`);
+      }
       this.logger.log(
         `Session ${session.id} registered in connector registry.`,
       );

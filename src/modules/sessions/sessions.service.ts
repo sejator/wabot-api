@@ -138,6 +138,9 @@ export class SessionsService implements OnModuleInit {
       const { auth_state, ...sessionWithoutAuth } = session;
       return sessionWithoutAuth;
     } else {
+      if (this.connectorRegistry.isDeleting(session.id)) {
+        return;
+      }
       const engine = this.engineRegistry.get(session.engine ?? 'baileys');
       return engine.connect(session);
     }
@@ -179,6 +182,9 @@ export class SessionsService implements OnModuleInit {
 
     for (const s of sessions) {
       try {
+        if (this.connectorRegistry.isDeleting(s.id)) {
+          continue;
+        }
         const engine = this.engineRegistry.get(s.engine ?? 'baileys');
         await engine.connect(s);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -202,30 +208,33 @@ export class SessionsService implements OnModuleInit {
   }
 
   async forceDelete(session_id: string) {
-    const connectorExists = this.connectorRegistry.has(session_id);
-    await this.prisma.session.update({
-      where: { id: session_id },
-      data: {
-        connected: false,
-        auth_state: Prisma.DbNull,
-      },
-    });
+    this.connectorRegistry.markDeleting(session_id);
 
-    await this.prisma.authKey.deleteMany({
-      where: { session_id },
-    });
-    if (connectorExists) {
+    try {
+      const connector = this.connectorRegistry.get(session_id);
+
+      if (connector) {
+        const engine = this.engineRegistry.get(connector.engine);
+        await engine.stop(session_id);
+      }
+
+      await this.prisma.session.update({
+        where: { id: session_id },
+        data: {
+          connected: false,
+          auth_state: Prisma.DbNull,
+        },
+      });
+
+      await this.prisma.authKey.deleteMany({
+        where: { session_id },
+      });
+
       this.connectorRegistry.unregister(session_id);
-      this.logger.warn(`Force deleted connector for session: ${session_id}`);
-      return {
-        success: true,
-        sessionId: session_id,
-      };
-    } else {
-      return {
-        success: false,
-        sessionId: session_id,
-      };
+
+      return { success: true, sessionId: session_id };
+    } finally {
+      this.connectorRegistry.unmarkDeleting(session_id);
     }
   }
 }
