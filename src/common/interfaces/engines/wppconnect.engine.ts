@@ -67,18 +67,17 @@ export class WppConnectEngine extends AbstractEngine implements IEngine {
     client?: WppClient,
   ) {
     if (state === 'qrReadSuccess') {
-      const payload = {
-        session_id: session.id,
-        name: session.name,
-        engine: session.engine || 'wppconnect',
-        status: 'synchronized',
-        timestamp: formatDateTime(new Date()),
-      } as SessionPayload;
-
-      wabot.emit('session.synchronized', payload);
-      this.webhook
-        .webhookServerAdmin('session.synchronized', payload)
-        .catch(() => {});
+      // const payload = {
+      //   session_id: session.id,
+      //   name: session.name,
+      //   engine: session.engine || 'wppconnect',
+      //   status: 'synchronized',
+      //   timestamp: formatDateTime(new Date()),
+      // } as SessionPayload;
+      // wabot.emit('session.synchronized', payload);
+      // this.webhook
+      //   .webhookServerAdmin('session.synchronized', payload)
+      //   .catch(() => {});
     }
 
     if (['isLogged', 'inChat'].includes(state) && client) {

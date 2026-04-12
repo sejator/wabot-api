@@ -397,36 +397,36 @@ export class WWebJSEngine extends AbstractEngine implements IEngine {
 
     client.on('authenticated', () => {
       this.logger.log(`Session ${sessionName} authenticated`);
-      const payload = {
-        session_id: session.id,
-        name: session.name,
-        engine: session.engine || 'baileys',
-        status: 'synchronized',
-        timestamp: formatDateTime(new Date()),
-      } as SessionPayload;
+      // const payload = {
+      //   session_id: session.id,
+      //   name: session.name,
+      //   engine: session.engine || 'baileys',
+      //   status: 'synchronized',
+      //   timestamp: formatDateTime(new Date()),
+      // } as SessionPayload;
 
-      wabot.emit('session.synchronized', payload);
-      this.webhook
-        .webhookServerAdmin('session.synchronized', payload)
-        .catch(() => {});
+      // wabot.emit('session.synchronized', payload);
+      // this.webhook
+      //   .webhookServerAdmin('session.synchronized', payload)
+      //   .catch(() => {});
     });
 
     client.on('loading_screen', (percent: number, message: string) => {
       this.logger.log(
         `Session ${sessionName} loading screen: ${percent}% - ${message}`,
       );
-      const payload = {
-        session_id: session.id,
-        name: session.name,
-        engine: session.engine || 'baileys',
-        status: 'synchronized',
-        timestamp: formatDateTime(new Date()),
-      } as SessionPayload;
+      // const payload = {
+      //   session_id: session.id,
+      //   name: session.name,
+      //   engine: session.engine || 'baileys',
+      //   status: 'synchronized',
+      //   timestamp: formatDateTime(new Date()),
+      // } as SessionPayload;
 
-      wabot.emit('session.synchronized', payload);
-      this.webhook
-        .webhookServerAdmin('session.synchronized', payload)
-        .catch(() => {});
+      // wabot.emit('session.synchronized', payload);
+      // this.webhook
+      //   .webhookServerAdmin('session.synchronized', payload)
+      //   .catch(() => {});
     });
 
     client.on('auth_failure', (msg) =>

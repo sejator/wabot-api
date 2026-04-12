@@ -159,18 +159,18 @@ export class BaileysEngine extends AbstractEngine implements IEngine {
       this.logger.debug(`creds.update for session ${session.id}`);
       void saveCreds();
 
-      const payload = {
-        session_id: session.id,
-        name: session.name,
-        engine: session.engine || 'baileys',
-        status: 'synchronized',
-        timestamp: formatDateTime(new Date()),
-      } as SessionPayload;
+      // const payload = {
+      //   session_id: session.id,
+      //   name: session.name,
+      //   engine: session.engine || 'baileys',
+      //   status: 'synchronized',
+      //   timestamp: formatDateTime(new Date()),
+      // } as SessionPayload;
 
-      wabot.emit('session.synchronized', payload);
-      this.webhook
-        .webhookServerAdmin('session.synchronized', payload)
-        .catch(() => {});
+      // wabot.emit('session.synchronized', payload);
+      // this.webhook
+      //   .webhookServerAdmin('session.synchronized', payload)
+      //   .catch(() => {});
     });
 
     const qrCodePromise = new Promise<string | null>((resolve) => {
